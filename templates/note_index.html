@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Note</title>
+    <!-- Bootstrap -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]--></head>
+  <body style="padding-top: 70px;">
+    <!--导航栏 -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <!-- -->   <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">Note Book</a></div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="/list">公共文章</a></li>
+            <li class="dropdown">
+              <a id="navbar-userinfo" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Drop
+                <span class="caret"></span></a>
+              <ul id="menu-user" class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+              </ul>
+            </li>
+            <div class="navbar-form navbar-right">
+              <button id="open-login" type="button" class="btn btn-default" data-toggle="modal" data-target="#Modal-Login">登录</button></div>
+          </ul>
+          <div class="navbar-form navbar-right" onsubmit="return search(this);">
+            <div class="form-group">
+              <span id="search-warning" class="label label-warning"></span>
+              <input id="header-search" type="text" class="form-control" placeholder="Search"></div>
+              <button id="header-search-buttom" type="submit" class="btn btn-default">Search</button>
+          </div>
+        </div>
+        <!--/.nav-collapse --></div>
+    </nav>
+    <!--导航栏 -->
+    <!--编辑栏 -->
+    <div id="title-editer" class="container">
+      <!--标题 -->
+      <div class="input-group">
+        <span class="input-group-addon" id="sizing-addon2">标题:</span>
+        <input id="text-title" type="text" class="form-control" placeholder="Title" ></div><!-- onchange="titleshow(this);" -->
+    </div>
+    <div id="essay-editer" class="container" style="padding-top: 1em;">
+      <!--正文-->
+      <textarea id="text-artical" class="form-control" rows="25" placeholder="Artical" style="max-width: 100%;" ></textarea><!-- onchange="articalshow(this);" -->
+      <p style="padding-top: 1em;">
+        <button id="text-submit" disabled="disabled" type="button" class="btn btn-primary">提交</button>
+        <button id="text-info-show" type="button" class="btn btn-default">详情</button>
+        <button id="text-shower-show" type="button" class="btn btn-default">预览</button>
+        <!-- <button type="button" class="btn btn-success">
+        Success
+        </button>
+        <button type="button" class="btn btn-info">
+        Info
+        </button>
+        <button type="button" class="btn btn-warning">
+        Warning
+        </button>
+        <button type="button" class="btn btn-danger">
+        Danger
+        </button>
+        <button type="button" class="btn btn-link">
+        Link
+        </button> -->
+      </p>
+    </div>
+    <!--编辑栏 -->
+    <!--属性栏 -->
+    <div id="attributer" class="container" style="display:none;overflow: visible;">
+    <div class=" panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <!--文章密码 -->
+            <div class="col-sm-6">
+            <div class="input-group" style="padding-bottom: 1em;">
+            <span class="input-group-addon">密码:</span>
+            <input id="text-password" type="text" class="form-control" disabled="disabled" placeholder="填0取消密码">
+            <span class="input-group-btn"><button id="text-password-on" class="btn btn-default" type="button">启用</button></span>
+            </div>
+            </div>
+            <!--文章密码 -->
+            <!--文章tag -->
+            <div class="col-sm-6" style="padding-bottom: 1em;">
+            <div class="input-group">
+            <span class="input-group-addon">tag:</span>
+            <input id="text-tag" type="text" class="form-control">
+             <span class="input-group-addon">用，或,分割</span>
+            </div>
+            </div>
+            <!--文章tag -->
+            <!--文章group -->
+            <div class="col-sm-6" style="padding-bottom: 1em;">
+            <div class="input-group">
+            <span class="input-group-addon">group:</span>
+            <input type="text" disabled="disabled" class="form-control" placeholder="暂未启用">
+            <span class="input-group-btn">
+            <button class="btn btn-default" type="button">Go!</button>
+            </span>
+            </div>
+            </div>
+            <!--文章group -->
+            <!--文章right -->
+            <div class="col-sm-6" style="padding-bottom: 1em;">
+            <div class="input-group">
+            <span class="input-group-addon">right:</span>
+            <input type="text" class="form-control" disabled="disabled" placeholder="暂未启用">
+            </div>
+            </div>
+            <!--文章right -->
+            <!--id/文章提交/编辑日期 -->
+            <div class="col-lg-12" style="padding-bottom: 1em;">
+            <div class="input-group">
+            <span class="input-group-addon">ID:</span>
+            <input id="text-id" type="text" class="form-control" disabled="disabled" placeholder="000000">
+            <span class="input-group-addon">提交:</span>
+            <input id="text-pubtime"  type="text" class="form-control" disabled="disabled" placeholder="0000-00-00 00:00:00">
+            <span class="input-group-addon">最近:</span>
+            <input id="text-lastesttime" type="text" class="form-control" disabled="disabled" placeholder="0000-00-00 00:00:00">
+            </div>
+            </div>
+            <!--文章right -->
+        </div><!-- /.row -->
+    </div>
+    </div>
+    </div>
+    <!--属性栏 -->
+    <!--展示栏 -->
+    <div id="shower" class="container">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 id="showtitle" class="panel-title">Title</h3></div>
+        <div id="showartical" class="panel-body">Artical</div></div>
+    </div>
+    <!--展示栏 -->
+    <!--列表组 -->
+    <div class="container">
+      <div id="listshower" class="list-group"></div>
+    </div>
+    <!--列表组 -->
+    <!--登录模组框 -->
+    <div class="modal fade" id="Modal-Login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">登录</h4></div>
+          <div class="modal-body">
+            <!--登录 -->
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label for="inputEmail3" class="col-sm-2 control-label">Email/Name</label>
+                  <div class="col-sm-10">
+                    <input id="login-name" type="email" class="form-control" id="inputEmail3" placeholder="Email">
+                    </div>
+                </div>
+                <div class="form-group">
+                  <label for="inputPassword3" class="col-sm-2 control-label">Password</label>
+                  <div class="col-sm-10">
+                    <input id="login-password" type="password" class="form-control" id="inputPassword3" placeholder="Password">
+                    </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-8">
+                    <div class="checkbox">
+                      <label>
+                        <input id="login-remember" type="checkbox">Remember me</label></div>
+                  </div>
+                </div>
+              </div>
+            <!--登录 --></div>
+          <div class="modal-footer">
+            <button id="login-bottom" type="submit" class="btn btn-default">登录</button>
+            <button onclick="window.open('/register')" id="Signup-bottom" type="submit" class="btn btn-default">注册</button></div>
+        </div>
+      </div>
+    </div>
+    <!--登录模组框 -->
+    <!--文章密码模组框 -->
+    <div class="modal fade" id="Modal-artical-password" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">请输入密码</h4></div>
+          <div class="modal-body">
+            <!--登录 -->
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label for="Modal-artical-passwords" class="col-sm-2 control-label">Password</label>
+                  <div class="col-sm-10">
+                    <input id="Modal-artical-passwords" type="password" class="form-control" id="inputPassword3" placeholder="Password">
+                    </div>
+                </div>
+              </div>
+            <!--登录 --></div>
+          <div class="modal-footer">
+            <button id="Modal-artical-passwords-submit" type="submit" class="btn btn-default">提交</button>
+        </div>
+      </div>
+    </div>
+    <!--文章密码模组框 -->
+<!--     <nav class="navbar-default navbar-static-bottom">
+      <div class="container">
+        <div class="navbar-header">
+          <button id="open-login" type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="">Note Book</a></div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active">
+              <a href="">Home</a></li>
+            <li>
+              <a href="#about">About</a></li>
+            <li>
+              <a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        /.nav-collapse</div>
+    </nav> -->
+    <!-- Bootstrap core JavaScript==================================================- ->
+    <!-- Placed at the end of the document so the pages load faster <script src="//cdn.bootcss.com/jquery/3.0.0-rc1/jquery.min.js"></script>-->
+    
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/js-sha256 v0.3.0.js"></script>
+    <script src="/js/notebook.js"></script>
+  </body>
+
+</html>
