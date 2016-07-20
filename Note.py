@@ -11,13 +11,12 @@ try:
     import note.sqllib as sqllib
     import note.mail as mail
     from note.config import *
-except Exception as e:
-    print (e)
+except:
     import sqllib
     import mail
     from config import *
 
-def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
+def GetArtical(uf):#快速获取文章内容，用于主页展示
     uf["title"] = CleanTitle(uf["title"])#id title共用关键字
     uf["id"] = 0
     if uf["title"].isdigit():
@@ -30,7 +29,7 @@ def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
         print("GetArtical",e)
         return ("Note.GetArtical UnkonwErr")
     if artical is None:
-        return {"title":None,"essay":None,"state":"Failed"}
+        return {"title":None,"essay":None}
     if artical["saltpassword"] is not None:#如果有密码
         if uf.get("mode",None)=="edit" and uf["uid"]==artical["uid"]:#如果有传入密码
             artical["state"]="success"
@@ -150,14 +149,10 @@ def DeleteArticalByNameTitle (af):
             print("DeleteArticalByNameTitle",e)
             return(str(e))
     return "Failed"
-    
 def GetArticalList(af):
-    if "uid" not in af:#必须有uid字段否则视为未登录，登录验证由session处理
+    if "name" not in af:#必须有name字段否则视为未登录，登录验证由session处理
         af["name"]=PUBLICUSER
         af["uid"]=PUBLICUSER
-    if ("page" not in af) or ("eachpage" not in af) or (af["page"]<1):
-       af["page"] = 1
-       af["eachpage"] = EACHPAGENUM
     if CheckUserName(af["name"]):
         try:
             result = sqllib.GetArticalList (af)
@@ -237,42 +232,6 @@ def CreateUser(uf):#生成用户，生成uid，生成盐
                 return (e,False)
     else:
         return ("Name Or Password Err",False)
-
-def ChangeUserPassword(uf):#更改密码，要求登录
-    #uf should have name password newpassword
-    uf["name"] = uf["name"].lower()
-    (Islogin,userinfo,state) = CheckUser(uf)
-    if Islogin:
-        info = sqllib.GetUserInfo (uf)
-        info["password"] = uf["newpassword"]
-        info = CreateSaltAndPassword(info)
-        sqllib.ResetPassword (info)
-        mail.Send(info["mail"],MAIL_TITLE_CGPASSWORD,MAIL_ARTICAL_CGPASSWORD)
-        return (True,"success")
-    else:
-        print("ChangeUserPassword",Islogin,userinfo,state)
-        return (False,"Name Or Password err")
-      
-def ReCreateUserPassword(uf):#重置密码用户名
-    import uuid
-    #uf should have ('uid','name','mail','salt','saltpassword')
-    uf["name"] = uf["name"].lower()
-    uf["mail"] = uf["mail"].lower()
-    #print("ReCreateUserPassword",uf)
-    if CheckUserName(uf["name"]) and CheckUserMail(uf["mail"]):
-        info = sqllib.GetUserInfo (uf)
-        if uf["mail"] == info["mail"]:
-            newpassword = str(uuid.uuid3(uuid.uuid1(), uf['mail']))
-            info["password"] = newpassword
-            info = CreateSaltAndPassword(info)
-            sqllib.ResetPassword (info)
-            mail.Send(uf["mail"],MAIL_TITLE_RSPASSWORD,MAIL_ARTICAL_RSPASSWORD%(newpassword))
-            return (True,"success")
-        else:
-            return (False,"Mail Not Match")
-    else:
-        return (False,"Name wrong")
-        
 def CheckUserName(Name):#检查用户名是否合法
     s = r'^[a-zA-Z][0-9a-zA-Z@.\-]{4,29}$'
     if re.match(s, Name):
@@ -281,7 +240,7 @@ def CheckUserName(Name):#检查用户名是否合法
         return False
 
 def CheckUserPassword (Password):#检查密码是否合法
-    s = r'^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,128}$'
+    s = r'^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,30}$'
     if re.match(s, Password):
         return True
     else:
@@ -325,8 +284,7 @@ def SendMail(mail):
     pass
     return True
 
-def CreateSaltAndPassword(af):#重新生成salt和密码
-    #password uid/name
+def CreateSaltAndPassword(af):
     t = str(int(time.time()))
     #生成salt
     salt = hashlib.sha256()

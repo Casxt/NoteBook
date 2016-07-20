@@ -6,6 +6,7 @@ try:
     from note.config import *
 except:
     from config import *
+
 ####################################
 #
 #用户操作
@@ -35,47 +36,39 @@ def CreateUser (uf):#创建用户
     conn.close()
     return True
 
-def GetUid (name,cursor,*l):#快速查询uid，right，group,可追加字段
+def GetUid (name,cursor):#快速查询uid，right，group
     uf={}
-    usercolumn=['uid','name','right','group']
-    usercolumn.extend(l)
+    usercolumn=('uid','right','group')
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `name`=%s """
     cursor.execute(sql,(name))
     value = cursor.fetchone()
     if value is not None:
-        uf = dict(map(lambda x,y:[x,y],usercolumn,value))
+        uf["uid"] = value[0]
+        uf["right"] = value[1]
+        uf["group"] = value[2]
     elif value is None:
         return("No Such User %s"%(name))
     else:
         return("CreatArtical Failed")
     return uf
-    
-def GetName (uid,cursor,*l):#快速查询uid，right，group
+def GetName (uid,cursor):#快速查询uid，right，group
     uf={}
-    usercolumn=['uid','name','right','group']
-    usercolumn.extend(l)
+    usercolumn=('uid','name','right','group')
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `uid`=%s """
     cursor.execute(sql,(uid))
     value = cursor.fetchone()
     if value is not None:
-        uf = dict(map(lambda x,y:[x,y],usercolumn,value))
+        uf["uid"] = value[0]
+        uf["name"] = value[1]
+        uf["right"] = value[2]
+        uf["group"] = value[3]
     elif value is None:
         return("No Such Uid %s"%(name))
     else:
         return("CreatArtical Failed")
     return uf
-
-def GetUserInfo (af):#获取user信息
-    conn = pymysql.connect(**SQLCONFIG)
-    cursor = conn.cursor()
-    value = GetUid (af["name"],cursor,"mail")
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return value
-    
 def GetLoginInfo (uf):#登录查询用
     #id,uid,name
     logincolumn=('uid','name','salt','saltpassword','lgnfailedtimes','lastfailedtime')
@@ -122,17 +115,6 @@ def CleanFailedTimes (uf):#登录成功清除计数
     conn.close()
     return True
 
-def ResetPassword (uf):#重置密码
-    #id,uid,name
-    conn = pymysql.connect(**SQLCONFIG)
-    cursor = conn.cursor()
-    sql =  """update """+TABLE["user"]+""" SET `salt`=%s,`saltpassword`=%s WHERE `uid`=%s """
-    cursor.execute(sql,(uf["salt"],uf["saltpassword"],uf["uid"]))
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return True
-    
 ####################################
 #
 #文章操作
@@ -146,13 +128,21 @@ def b64(text):
     return (encodestr.decode())
     
 def FastCreatArtical (af):#快速创建文章
+    # usercolumn=('uid','right')
+    # SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     Articalcolumn = ('uid','title','right','essay','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")
+    # Searchcolumn = ('uid','b64title','right','b64essay','pubtime','lastesttime')
+    # SearchColumn = str(Searchcolumn).replace("'","`")
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     #创建文章
     sql =   """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,now(),now())"""
     cursor.execute(sql,(af.get("uid",PUBLICUSER),af["title"],af.get("right",0),af["essay"]))
+    #base64索引
+    # if (BASE64SEARCH):#如果开启base64查询库
+        # sql =   """insert into """+TABLE["search"]+""" """+SearchColumn+""" values (%s,%s,%s,%s,now(),now())"""
+        # cursor.execute(sql,(af.get("uid",PUBLICUSER),b64(af["title"]),af.get("right",0),b64(af["essay"])))
     cursor.close()
     conn.commit()
     conn.close()
@@ -202,7 +192,7 @@ def EditArtical (af):
         af["group"] = uf["group"]
     SetUpdateInfo.append(af["uid"])
     SetUpdateInfo.append(af["rawtitle"])
-    sql = """update """+TABLE["artical"]+""" set """+SetUpdateColumn+"""`lastesttime`=now() where `uid`=%s AND `title`=%s"""
+    sql = """update """+TABLE["artical"]+""" set """+SetUpdateColumn+"""`lastesttime`=now() where `uid`=%s AND `title`=%s AND `prikey` is NULL AND `pubkey` is NULL"""
     num = cursor.execute(sql,SetUpdateInfo)
     if num>1:
         #一次更新多条！
@@ -214,7 +204,7 @@ def EditArtical (af):
     if num==1:
         return True
     else:
-        return num
+        return False
 
 def GetArtical (af):#直接获取文章信息
     Articalcolumn=('id','uid','name','title','essay','tag','right','blgroup','pubtime','lastesttime','salt','saltpassword')
@@ -224,7 +214,7 @@ def GetArtical (af):#直接获取文章信息
     ######
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND  (`id`=%s OR `title`=%s)"""
+    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND  (`id`=%s OR `title`=%s) AND `prikey` is NULL AND `pubkey` is NULL"""
     cursor.execute(sql,(af["uid"],af.get("id",None),af.get("title",None)))
     value = cursor.fetchone()
     cursor.close()
@@ -236,16 +226,17 @@ def GetArtical (af):#直接获取文章信息
     return None
 
 def GetArticalList (af):#获取文章列表
-    #af应有page一项,eachpage
-    Articalcolumn=('id','name','title','tag','saltpassword','right','blgroup','pubtime','lastesttime')#,'essay'
+    Articalcolumn=('id','name','title','essay','tag','saltpassword','right','blgroup','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
     ######
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
-    cursor.execute(sql,(af["uid"],(af["page"]-1)*af["eachpage"],af["page"]*af["eachpage"]))
+    if "uid" not in af:
+        af["uid"]=GetUid (af.get("name",PUBLICUSER),cursor)["uid"]
+    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s """
+    cursor.execute(sql,(af["uid"]))
     values = cursor.fetchall()
     cursor.close()
     conn.commit()
@@ -254,7 +245,6 @@ def GetArticalList (af):#获取文章列表
     for value in values:
         result.append(dict(zip(Articalcolumn,value)))
     return result
-    
 def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
     Articalcolumn=('id','name','title','essay','right','blgroup','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
@@ -268,8 +258,8 @@ def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个�
     if "uid" not in af:
         af["uid"]=GetUid (af.get("name",PUBLICUSER),cursor)["uid"]
     keyword = '%'+af['keyword'].replace(" ","%")+'%'
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE ( `uid`=%s OR `uid`=%s ) AND 
-    `saltpassword` is NULL AND ( `essay` LIKE %s OR  `title` LIKE %s) LIMIT 0,20"""
+    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE ( `uid`=%s OR `uid`=%s ) AND `saltpassword` is NULL AND `prikey` is NULL AND `pubkey` is NULL AND 
+    ( `essay` LIKE %s OR  `title` LIKE %s) LIMIT 0,20"""
     cursor.execute(sql,(af["uid"],PUBLICUSER,keyword,keyword))
     values = cursor.fetchall()
     cursor.close()

@@ -2,15 +2,13 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
-#import note.sqllib as sqllib
+import note.sqllib as sqllib
 import note.Note as Note
 
 # Create your views here.
-
 @ensure_csrf_cookie
 def index(request):
     return render(request, 'note_index.html')
-    
 @ensure_csrf_cookie
 def CheckLogin(request):
     if request.is_ajax() and request.method == 'POST':
@@ -24,7 +22,6 @@ def CheckLogin(request):
         userinfo["state"]="success"
         print(userinfo)
         return HttpResponse(json.dumps(userinfo)) 
-        
 @ensure_csrf_cookie
 def submitartical(request):
     if request.is_ajax() and request.method == 'POST':
@@ -38,7 +35,6 @@ def submitartical(request):
         info = Note.SubmitArtical(dict)
         return HttpResponse('{"state":"%s"}'%str(info))  
     return render(request, 'note_index.html')
-    
 @ensure_csrf_cookie
 def editartical(request):
     if request.is_ajax() and request.method == 'POST':
@@ -55,7 +51,6 @@ def editartical(request):
             info = Note.EditArtical(dict)
             return HttpResponse(json.dumps({"state":str(info)}))
     return render(request, 'note_index.html')
-    
 @ensure_csrf_cookie
 def deleteartical(request):
     if request.is_ajax() and request.method == 'POST' and "uid" in request.session:
@@ -69,7 +64,6 @@ def deleteartical(request):
             else:
                 return HttpResponse(json.dumps({"state":"Title Not Found"}))
         return HttpResponse(json.dumps({"state":"Name err"}))
-        
 @ensure_csrf_cookie
 def getartical(request,keyword=None):
     if request.is_ajax() and request.method == 'POST':
@@ -79,7 +73,6 @@ def getartical(request,keyword=None):
         artical = Note.GetArtical(dict)#getartical by
         return HttpResponse(json.dumps(artical))
     return render(request, 'note_index.html')
-    
 @ensure_csrf_cookie
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -92,7 +85,6 @@ def login(request):
             userinfo.pop("uid")#uid 不传回客户端
         return HttpResponse(json.dumps(userinfo)) 
     return render(request, 'note_index.html')
-    
 @ensure_csrf_cookie
 def register(request):
     if request.is_ajax() and request.method == 'POST':
@@ -102,7 +94,6 @@ def register(request):
         print(str(userinfo),state)
         return HttpResponse(json.dumps({'state':userinfo})) 
     return render(request, 'note_register.html')
-    
 @ensure_csrf_cookie
 def getarticallist(request):
     if request.is_ajax() and request.method == 'POST':
@@ -116,7 +107,6 @@ def getarticallist(request):
             print(articallist)
             return HttpResponse(json.dumps({'state':articallist})) 
     return render(request, 'note_register.html')
-    
 @ensure_csrf_cookie
 def searchartical(request):
     if request.is_ajax() and request.method == 'POST':
@@ -138,38 +128,6 @@ def searchartical(request):
             print(articallist)
             return HttpResponse(json.dumps({'state':articallist})) 
     return render(request, 'note_index.html')
-    
-@ensure_csrf_cookie
-def ReSetPassword(request):
-    if request.is_ajax() and request.method == 'POST':
-    #uf should have ('name',"mail")
-        dict = getpostdict(request)
-        (result,state) = Note.ReCreateUserPassword(dict)
-        if result:
-            return HttpResponse(json.dumps({'state':"success"})) 
-        else:
-            print(state)
-            return HttpResponse(json.dumps({'state':'failed'})) 
-    return render(request, 'note_index.html')
-
-@ensure_csrf_cookie
-def ChangePassword(request):
-    if request.is_ajax() and request.method == 'POST':
-    #uf should have ('name',"password","newpassword")
-        dict = getpostdict(request)
-        (dict,iflogin)=checklogininfo(request,dict)
-        print("dict",dict)
-        if iflogin:
-            (result,state) = Note.ChangeUserPassword(dict)
-            if result:
-                return HttpResponse(json.dumps({'state':state})) 
-            else:
-                print(state)
-                return HttpResponse(json.dumps({'state':'failed'})) 
-        else:
-            return render(request, 'note_index.html')
-    return render(request, 'note_index.html')
-    
 def logout(request):
     request.session.pop("name","del name failed")
     request.session.pop("password","del password failed")

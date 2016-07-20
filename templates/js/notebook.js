@@ -1,7 +1,6 @@
 //处理cookie
 //alert(window.location.pathname);
 //系统关键search
-var path = window.location.pathname
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -15,16 +14,6 @@ function getCookie(name) {
         }
     }
     return cookieValue;
-}
-function setCookie(c_name, value, expiredays) {
-    var exdate = new Date();
-    exdate.setDate(exdate.getDate() + expiredays);
-    document.cookie = c_name + "=" + escape(value) + ((expiredays == null) ? "": ";expires=" + exdate.toGMTString()); // + ";path=/"
-}
-function getUTCzone() {
-    var d = new Date();
-    utc = d.getTimezoneOffset() / 60;
-    return utc;
 }
 var csrftoken = getCookie('csrftoken');
 //处理cookie
@@ -46,6 +35,7 @@ function checkloginstate() {
         },
         dataType: 'json',
         success: function(data) {
+            //setCookie("login", data.loginstate);
             if (data.loginstate == 1) {
                 afterlogin(data);
             } else { //未登录即注销当前用户信息
@@ -67,16 +57,10 @@ function afterlogin(data) {
     $("#open-login").hide();
     $("#header-search-buttom").show();
     $("#header-search").show();
-    document.getElementById("menu-user").innerHTML = '<a id="navbar-userinfo" href="#" class="dropdown-toggle" data-toggle="dropdown" \
-                                                    role="button" aria-haspopup="true" aria-expanded="false">\
-                                                    ' + data.name + '<span class="caret"></span></a>\
-                                                    <ul class="dropdown-menu">\
-                                                    <li class="dropdown-header"></li>\
-                                                    <li><a href="/list/' + data.name + '/">我的文章</a></li>\
-                                                    <li role="separator" class="divider"></li>\
-                                                    <li><a id="change-password" href="#">更改密码</a></li>\
-                                                    <li><a id="open-logout" href="/">登出</a></li>\
-                                                    </ul>';
+    document.getElementById("navbar-userinfo").innerHTML = data.name + '<span class="caret"></span>';
+    document.getElementById("menu-user").innerHTML = '<li><a href="/list/' + data.name + '/">我的文章</a></li>\
+                                                            <li class="dropdown-header"></li>\
+                                                            <li><a id="open-logout" href="/">登出</a></li>';
 }
 
 //检查链接
@@ -90,8 +74,8 @@ function checkeurl() {
     var matchpathregister = /^\/register\/([\S]{0,})$/g; //匹配register/...
     var matchpathlist = /^\/l(ist)?\/([\S]{0,})$/g; //匹配list/...
     if (matchpathlogin.test(path)) {
-        //
-    } else if (matchpathlogout.test(path)) {
+
+} else if (matchpathlogout.test(path)) {
         //
     } else if (matchpathedit.test(path)) {
         EditArtical();
@@ -103,7 +87,7 @@ function checkeurl() {
         autogetartical();
     } else if (matchpath.test(path)) {
         autogetartical();
-    } else {//匹配到不符合规则的url时？
+    } else {
         autoloadartical();
     }
     return 0;
@@ -138,14 +122,12 @@ function autogetartical() {
     document.getElementById("showtitle").innerHTML = "Loading...";
     document.getElementById("showartical").innerHTML = "";
     if (a[2] != "undefined" && a[4] != "undefined") {
-        var name = a[1];
         var postdata = {
             "name": a[2],
             "title": a[4],
             "password": sha256($("#Modal-artical-passwords").val()),
         };
     } else if (a[2] != "undefined" && a[4] == "undefined") {
-        var name = "";
         var postdata = {
             "title": a[2],
             "password": sha256($("#Modal-artical-passwords").val()),
@@ -171,10 +153,9 @@ function autogetartical() {
                 $("#Modal-artical-password").modal("hide");
                 $("#text-title").val(data.title);
                 $("#text-artical").val(data.essay);
-                var title = data.title;
-                var essay = data.essay;
-                var href =  encodeURI(name + title);
-                document.getElementById("showtitle").innerHTML = '<a " href="/e/' + href + '/">' + title + '</a>';
+                title = data.title;
+                essay = data.essay;
+                document.getElementById("showtitle").innerHTML = title;
                 document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
                 document.getElementById("text-pubtime").value = data.pubtime;
                 document.getElementById("text-lastesttime").value = data.lastesttime;
@@ -225,11 +206,10 @@ function getarticallist() { //获取文章列表
                 var title = "";
                 for (i in list) {
                     title = list[i].title;
-                    var href =  encodeURI(name + title);
-                    html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
-                                                            <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span><strong>' + title + '</strong>\
+                    html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + name + title + '/" type="button" class="list-group-item">\
+                                                            <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + '\
                                                             <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                            <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
+                                                            <button onclick="window.location.href=' + "'/e/" + name + title + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
                                                             </a>';
                 }
                 if (a[3] != getCookie("name")) {
@@ -237,6 +217,59 @@ function getarticallist() { //获取文章列表
                 }
             } else {
                 alert(data.state);
+            }
+            return (data);
+        }
+    });
+}
+//获取编辑文章信息 改正则时注意a的位置编号
+function EditArtical() {
+    var path = window.location.pathname;
+    var matchpath2 = /^\/e(dit)?\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
+    var a = matchpath2.exec(path);
+    a[3] = decodeURI(a[3]);
+    a[5] = decodeURI(a[5]);
+    var isname = 0
+    if (a[3] != "undefined" && a[5] != "undefined") {
+        postdata = {
+            "name": a[3],
+            "title": a[5],
+            "mode": "edit",
+        }
+        isname = 1
+    } else if (a[3] != "undefined" && a[5] == "undefined") {
+        postdata = {
+            "title": a[3],
+            "mode": "edit",
+        }
+    }
+    $.ajax({
+        beforeSend: function(request) {
+            request.setRequestHeader('X-CSRFToken', csrftoken);
+        },
+        type: 'POST',
+        url: '/getartical/',
+        data: postdata,
+        dataType: 'json',
+        success: function(data) {
+            $("#text-title").val(data.title);
+            $("#text-artical").val(data.essay);
+            title = data.title;
+            essay = data.essay;
+            document.getElementById("showtitle").innerHTML = title;
+            document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+            document.getElementById("text-submit").id = "text-edit-submit";
+            document.getElementById("text-edit-submit").value = title;
+            document.getElementById("text-pubtime").value = data.pubtime;
+            document.getElementById("text-lastesttime").value = data.lastesttime;
+            document.getElementById("text-id").value = data.id;
+            if (a[6] == undefined) {
+                document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
+            } else {
+                document.getElementById("text-edit-submit").path = "/" + a[2] + a[4] + a[6];
+            }
+            if (isname) {
+                document.getElementById("text-edit-submit").name = a[3];
             }
             return (data);
         }
@@ -274,11 +307,10 @@ function SearchArtical() {
                     $("#shower").hide();
                     for (i in list) {
                         title = list[i].title;
-                        var href =  encodeURI(name + title);
-                        html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
+                        html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + name + title + '/" type="button" class="list-group-item">\
                                                                 <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + '\
                                                                 <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
+                                                                <button onclick="window.location.href=' + "'/e/" + name + title + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
                                                                 </a>'
                     }
                 }
@@ -286,75 +318,6 @@ function SearchArtical() {
         }
     });
 }
-//获取编辑文章信息 改正则时注意a的位置编号
-function EditArtical() {
-    var path = window.location.pathname;
-    var matchpath2 = /^\/e(dit)?\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
-    var a = matchpath2.exec(path);
-    a[3] = decodeURI(a[3]);
-    a[5] = decodeURI(a[5]);
-    var isname = 0
-    if (a[3] != "undefined" && a[5] != "undefined") {
-        postdata = {
-            "name": a[3],
-            "title": a[5],
-            "mode": "edit",
-        }
-        isname = 1
-    } else if (a[3] != "undefined" && a[5] == "undefined") {
-        postdata = {
-            "title": a[3],
-            "mode": "edit",
-        }
-    }
-    $.ajax({
-        beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
-        },
-        type: 'POST',
-        url: '/getartical/',
-        data: postdata,
-        dataType: 'json',
-        success: function(data) {
-            if (data.state=="success"){//有该文章
-                title = data.title;
-                essay = data.essay;
-                edittitle = unescape(getCookie("title"))
-                editessay = unescape(getCookie("essay"))
-                if (edittitle == "null" && editessay == "null"){
-                    edittitle = title;
-                    editessay = essay;
-                }
-                $("#text-title").val(edittitle);
-                $("#text-artical").val(editessay);
-                document.getElementById("showtitle").innerHTML = title;
-                document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
-                document.getElementById("text-submit").id = "text-edit-submit";
-                document.getElementById("text-edit-submit").value = title;
-                document.getElementById("text-pubtime").value = data.pubtime;
-                document.getElementById("text-lastesttime").value = data.lastesttime;
-                document.getElementById("text-id").value = data.id;
-                if (a[6] == undefined) {
-                    document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
-                } else {
-                    document.getElementById("text-edit-submit").path = "/" + a[2] + a[4] + a[6];
-                }
-                if (isname) {
-                    document.getElementById("text-edit-submit").name = a[3];
-                }
-                return (data);
-            }else{//无该文章
-                $("#title-editer").hide();
-                $("#essay-editer").hide();
-                title = "No Such Artical";
-                essay = "You Can't Edit The Artical Not Exist";
-                document.getElementById("showtitle").innerHTML = title;
-                document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
-            }
-        }
-    });
-}
-
 //监控回车搜素
 $('#header-search').keydown(function(e) {
     if (e.keyCode == 13 && CheckSearchInput()) {
@@ -368,12 +331,10 @@ $('#header-search-buttom').click(function() {
     }
 });
 //检查搜索关键词
-$('#header-search').on("focus",
-function() {
+$('#header-search').on("focus",function() {
     document.getElementById("search-warning").innerHTML = "";
 });
-$('#header-search').on("change",
-function() {
+$('#header-search').on("change",function() {
     CheckSearchInput();
 });
 //检查搜索框
@@ -382,26 +343,38 @@ function CheckSearchInput() {
     var len = word.replace(/\s/g, "").length;
     if (len < 3) {
         document.getElementById("search-warning").innerHTML = "至少3个字";
+        //$("#header-search").attr({"name":"disabled"});
+        //$("#header-search-buttom").attr({"disabled":"disabled"});
         return false;
     } else if (word.length >= 40) {
         document.getElementById("search-warning").innerHTML = "至多40个字";
+        //$("#header-search").attr({"name":"disabled"});
+        //$("#header-search-buttom").attr({"disabled":"disabled"});
         return false;
     } else {
         document.getElementById("search-warning").innerHTML = "";
+        //$("#header-search").attr({"name":"true"});
+        //$("#header-search-buttom").removeAttr("disabled");
         return true;
     }
 }
 //过滤关键字
 //提交
-
+function setCookie(c_name, value, expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = c_name + "=" + escape(value) + ((expiredays == null) ? "": ";expires=" + exdate.toGMTString()); // + ";path=/"
+}
+function getUTCzone() {
+    var d = new Date();
+    utc = d.getTimezoneOffset() / 60;
+    return utc;
+}
 //监控文章修改
-$(document).on('change', '#text-artical',
-function() {
-    articalshow()
-});
+//$("#text-artical").change(articalshow());
+$(document).on('change', '#text-artical',function(){articalshow()});
 function articalshow() //过滤文章关键字
 {
-    var path = window.location.pathname
     var word = document.getElementById("text-artical").value;
     var title = document.getElementById("text-title").value;
     word = word.replace(/<script/g, "").replace(/script>/g, "");
@@ -410,30 +383,28 @@ function articalshow() //过滤文章关键字
     word = word.replace(/<style/g, "").replace(/style>/g, "");
     word = word.replace(/<frameset/g, "").replace(/frameset>/g, "");
     document.getElementById("text-artical").value = word;
-    document.getElementById("showartical").innerHTML = word.replace(/\n/g, "<br>");
-    setCookie((path=="/")?"newessay":"essay", escape(word), 30);
+    document.getElementById("showartical").innerHTML = word.replace("\n","<br>");
+    setCookie("essay", escape(word), 30);
     var artical = word;
-    if (artical.length > 10 && artical.length < 5000 && title.length > 2 && title.length < 100) {
+    if (artical.length > 10 && artical.length < 5000 && title.length > 5 && title.length < 100) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
-        $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");
-        $("#text-submit,#text-edit-submit").text("提交");
-        //document.getElementById("text-submit").className = "btn btn-primary";
-        //document.getElementById("text-submit").innerHTML = "提交";
+        //$("#text-edit-submit").removeAttr("disabled");
         return true;
     } else {
-        //$("#text-submit").attr({"disabled": "disabled"});
-        //$("#text-edit-submit").attr({"disabled": "disabled"});
+        $("#text-submit").attr({
+            "disabled": "disabled"
+        });
+        $("#text-edit-submit").attr({
+            "disabled": "disabled"
+        });
         return false;
     }
 }
 //监控标题修改
-$(document).on('change', '#text-title',
-function() {
-    titleshow()
-});
+//$("#text-title").change(alert("dfgdfgd"));
+$(document).on('change', '#text-title',function(){titleshow()});
 function titleshow() //过滤标题关键字
 {
-    var path = window.location.pathname
     var word = document.getElementById("text-title").value;
     var artical = document.getElementById("text-artical").value;
     word = word.replace(/<|>/g, "");
@@ -441,24 +412,24 @@ function titleshow() //过滤标题关键字
     document.getElementById("text-title").value = word;
     document.getElementById("showtitle").innerHTML = word;
     var title = word;
-    setCookie((path=="/")?"newtitle":"title", escape(word), 30);
-    if (artical.length > 10 && artical.length < 5000 && title.length > 2 && title.length < 100) {
+    setCookie("title", escape(word), 30);
+    if (artical.length > 10 && artical.length < 5000 && title.length > 5 && title.length < 100) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
-        $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");
-        $("#text-submit,#text-edit-submit").text("提交");
-        //document.getElementById("text-submit").className = "btn btn-primary";
-        //document.getElementById("text-submit").innerHTML = "提交";
+        //document.getElementById("text-edit-submit").removeAttribute("disabled");
+        //$("#text-edit-submit").removeAttr("disabled");
         return true;
     } else {
-        //$("#text-submit").attr({"disabled": "disabled"});
-        //$("#text-edit-submit").attr({"disabled": "disabled"});
+        $("#text-submit").attr({
+            "disabled": "disabled"
+        });
+        $("#text-edit-submit").attr({
+            "disabled": "disabled"
+        });
         return false;
     }
 }
 //监控修改
-$(document).on('click', '#text-edit-submit',
-function() { //提交文章
-    var path = window.location.pathname
+$(document).on('click', '#text-edit-submit',function(){ //提交文章
     var postdata = {
         "title": $("#text-title").val(),
         "essay": $("#text-artical").val(),
@@ -482,74 +453,18 @@ function() { //提交文章
             dataType: 'json',
             success: function(data, status) {
                 if (data.state == "success") {
-                    setCookie((path=="/")?"newtitle":"title", "", 0);
-                    setCookie((path=="/")?"newessay":"essay", "", 0);
+                    setCookie("title", "", 0);
+                    setCookie("essay", "", 0);
                     window.location.href = document.getElementById("text-edit-submit").path;
                 } else {
                     alert(data.state);
                 }
             }
         });
-    }else{
-        $("#text-submit,#text-edit-submit").attr("class","btn btn-danger");
-        $("#text-submit,#text-edit-submit").text("内容过少");
-        //document.getElementById("text-submit").className = "btn btn-danger";
-        //document.getElementById("text-submit").innerHTML = "内容过少";
-    }
-});
-//监控提交
-$(document).on('click', '#text-submit',
-function() {
-    var path = window.location.pathname
-    var postdata = {
-        "title": $("#text-title").val(),
-        "essay": $("#text-artical").val(),
-        "password": $("#text-password").val(),
-        "tag": $("#text-tag").val(),
-        "name": getCookie("name"),
-    };
-    if ($('#text-password').attr("disabled") == "disabled") {
-        delete(postdata["password"]);
-    }
-    if (titleshow() && articalshow()) {
-    document.getElementById("text-submit").className = "btn btn-warning";
-    document.getElementById("text-submit").innerHTML = "Submiting...";
-    var name = getCookie("name");
-    if (name == null) {
-        name = "";
-    } else {
-        name = name + "/";
-    }
-    $.ajax({
-        beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
-        },
-        type: 'POST',
-        url: '/submitartical/',
-        data: postdata,
-        // contentType: "application/json",//该句代码不能加，加了之后无法POST
-        dataType: 'json',
-        success: function(data, status) {
-            if (data.state == "success") {
-                setCookie((path=="/")?"newtitle":"title", "", 0);
-                setCookie((path=="/")?"newessay":"essay", "", 0);
-                document.getElementById("text-submit").className = "btn btn-success";
-                document.getElementById("text-submit").innerHTML = "success";
-                window.location.href = "/" + name + $("#text-title").val() + "/";
-            } else {
-                document.getElementById("text-submit").className = "btn btn-danger";
-                document.getElementById("text-submit").innerHTML = data.state;
-            }
-        }
-    });
-    }else{
-        document.getElementById("text-submit").className = "btn btn-danger";
-        document.getElementById("text-submit").innerHTML = "内容过少";
     }
 });
 //监控删除
-$(document).on('click', '.artical-delete',
-function() { //提交文章
+$(document).on('click', '.artical-delete',function() {//提交文章
     var title = $(this).val();
     $(this).html('<span id="search-warning" class="label label-warning">Deleteing...</span>');
     $.ajax({
@@ -573,13 +488,51 @@ function() { //提交文章
         }
     });
 });
-
-//监控登录按钮
-$(document).on('click', "#open-login",
-function() {
-    $("#Modal-Login").modal("show");
+//监控提交
+$(document).on('click', '#text-submit',function(){ //提交文章
+    var postdata = {
+        "title": $("#text-title").val(),
+        "essay": $("#text-artical").val(),
+        "password": $("#text-password").val(),
+        "tag": $("#text-tag").val(),
+        "name": getCookie("name"),
+    };
+    if ($('#text-password').attr("disabled") == "disabled") {
+        delete(postdata["password"]);
+    }
+    document.getElementById("text-submit").className = "btn btn-warning";
+    document.getElementById("text-submit").innerHTML = "Submiting...";
+    var name = getCookie("name");
+    if (name == null) {
+        name = "";
+    } else {
+        name = name + "/";
+    }
+    $.ajax({
+        beforeSend: function(request) {
+            request.setRequestHeader('X-CSRFToken', csrftoken);
+        },
+        type: 'POST',
+        url: '/submitartical/',
+        data: postdata,
+        // contentType: "application/json",//该句代码不能加，加了之后无法POST
+        dataType: 'json',
+        success: function(data, status) {
+            if(data.state=="success"){
+                setCookie("title", "", 0);
+                setCookie("essay", "", 0);
+                document.getElementById("text-submit").className = "btn btn-success";
+                document.getElementById("text-submit").innerHTML = "success";
+                window.location.href = "/" + name + $("#text-title").val() + "/";
+            }else{
+                document.getElementById("text-submit").className = "btn btn-danger";
+                document.getElementById("text-submit").innerHTML = data.state;
+            }
+        }
+    });
 });
-$("#login-bottom").click(function() { //提交登录
+//监控登录按钮
+$("#login-bottom").click(function() {//提交登录
     document.getElementById("login-bottom").className = "btn btn-warning";
     document.getElementById("login-bottom").innerHTML = "Checking...";
     $.ajax({
@@ -602,6 +555,8 @@ $("#login-bottom").click(function() { //提交登录
                 setCookie("name", data.name);
                 document.getElementById("login-bottom").className = "btn btn-success";
                 document.getElementById("login-bottom").innerHTML = "Success";
+                $("#navbar-userinfo").show();
+                document.getElementById("navbar-userinfo").innerHTML = data.name + '<span class="caret"></span>';
                 $('#Modal-Login').modal('hide');
                 afterlogin(data);
             }
@@ -648,13 +603,14 @@ function() //禁用密码
     $("#text-password").attr('disabled', 'disabled');
 });
 //监控打开登录退出页
-//提交登录
 $(document).on('click', '#open-login',
-function() {
+function() //提交登录
+{
     //window.open("/login");
 });
-//提交登出
-function logout() {
+$(document).on('click', '#open-logout',
+function() //提交登出
+{
     $.ajax({
         type: 'GET',
         url: '/logout/',
@@ -666,18 +622,15 @@ function logout() {
             if (data.info != "success") {
                 //失败？
             } else if (data.info == "success") { //成功退出
+                setCookie("login", 1);
+                setCookie("name", data.name);
                 $("#navbar-userinfo").hide();
                 $("#open-login").show();
                 setCookie("login", 0, 0);
                 setCookie("name", "", 0);
-                window.location.href = window.location.pathname;
             }
         }
     });
-}
-$(document).on('click', '#open-logout',
-function() {
-    logout();
 });
 
 //检查注册字符
@@ -696,7 +649,7 @@ function CheckRegisterMail(mail) {
     return false;
 }
 function CheckRegisterPassword(passwords) {
-    var matchepassword = /^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,128}$/g;
+    var matchepassword = /^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,30}$/g;
     if (matchepassword.test(passwords)) {
         return true;
     }
@@ -822,147 +775,5 @@ function() {
     }
     if (password1 != password2) {
         document.getElementById("register-confirm-password-warning").innerHTML = "2次输入密码不同";
-    }
-});
-//=====================
-//更改密码检查
-//=====================
-//监控修改密码按钮
-$(document).on('click', "#change-password",
-function() {
-    $("#change-user-password").modal("show");
-});
-//检查密码1
-$(document).on('focus', '#change-newpassword',
-function() {
-    document.getElementById("change-password-warning").innerHTML = "";
-});
-//检查密码1
-$(document).on('blur', '#change-newpassword',
-function() {
-    var password1 = $("#change-newpassword").val();
-    if (!CheckRegisterPassword(password1)) {
-        document.getElementById("change-password-warning").innerHTML = "包含非法字符";
-    }
-    if (password1.length < 6) {
-        document.getElementById("change-password-warning").innerHTML = "至少6位";
-    }
-});
-//检查密码2
-$(document).on('focus', '#change-confirm-newpassword',
-function() {
-    document.getElementById("change-confirm-password-warning").innerHTML = "";
-});
-//检查密码2
-$(document).on('blur', '#change-confirm-newpassword',
-function() {
-    var password1 = $("#change-newpassword").val();
-    var password2 = $("#change-confirm-newpassword").val();
-    if (!CheckRegisterPassword(password2)) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "包含非法字符";
-    }
-    if (password2.length < 6) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "至少6位";
-    }
-    if (password1 != password2) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "2次输入密码不同";
-    }
-});
-$(document).on('click', "#change-password-submit",
-function() {
-    var oldpassword = $("#change-oldpassword").val();
-    var password1 = $("#change-newpassword").val();
-    var password2 = $("#change-confirm-newpassword").val();
-    var istrue = true;
-    if (!CheckRegisterPassword(oldpassword)) {
-        document.getElementById("change-oldpassword-warning").innerHTML = "密码有误";
-        istrue = false;
-    }
-    if (!CheckRegisterPassword(password1)) {
-        document.getElementById("change-password-warning").innerHTML = "密码有误";
-        istrue = false;
-    }
-    if (!CheckRegisterPassword(password2)) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "密码有误";
-        istrue = false;
-    }
-    if (password1 != password2) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "2次输入密码不同";
-        istrue = false;
-    }
-    if (istrue) {
-        document.getElementById("change-password-submit").className = "btn btn-warning";
-        document.getElementById("change-password-submit").innerHTML = "Changing...";
-        $.ajax({
-            beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
-            },
-            type: 'POST',
-            url: '/changepassword/',
-            data: {
-                "name": getCookie("name"),
-                "password": sha256($("#change-oldpassword").val()),
-                "newpassword": $("#change-confirm-newpassword").val()
-            },
-            dataType: 'json',
-            success: function(data) {
-                if (data.state != "success") {
-                    document.getElementById("change-password-submit").className = "btn btn-danger";
-                    document.getElementById("change-password-submit").innerHTML = data.state;
-                } else if (data.state == "success") {
-                    document.getElementById("change-password-submit").className = "btn btn-success";
-                    document.getElementById("change-password-submit").innerHTML = "Success";
-                }
-            }
-        });
-    }
-});
-//=====================
-//重置密码
-//=====================
-//监控重置密码按钮
-$(document).on('click', "#reset-open",
-function() {
-    $("#Modal-Login").modal("hide");
-    $("#reset-password").modal("show");
-});
-//提交重置密码
-$(document).on('click', "#reset-submit",
-function() {
-    var name = $("#reset-name").val();
-    var mail = $("#reset-mail").val();
-    var istrue = true;
-    if (!CheckRegisterName(name)) {
-        document.getElementById("reset-name-warning").innerHTML = "用户名有误";
-        istrue = false;
-    }
-    if (!CheckRegisterMail(mail)) {
-        document.getElementById("reset-mail-warning").innerHTML = "邮箱有误";
-        istrue = false;
-    }
-    if (istrue) {
-        document.getElementById("reset-submit").className = "btn btn-warning";
-        document.getElementById("reset-submit").innerHTML = "Reseting...";
-        $.ajax({
-            beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
-            },
-            type: 'POST',
-            url: '/resetpassword/',
-            data: {
-                "name": $("#reset-name").val(),
-                "mail": $("#reset-mail").val()
-            },
-            dataType: 'json',
-            success: function(data) {
-                if (data.state != "success") {
-                    document.getElementById("reset-submit").className = "btn btn-danger";
-                    document.getElementById("reset-submit").innerHTML = data.state;
-                } else if (data.state == "success") {
-                    document.getElementById("reset-submit").className = "btn btn-success";
-                    document.getElementById("reset-submit").innerHTML = "Success";
-                }
-            }
-        });
     }
 });

@@ -1,5 +1,5 @@
 import sqllib
-#import Note
+import Note
 import mail
 import hashlib
 import base64
@@ -26,23 +26,6 @@ def TestNoteCreateUser():
         }
     r = Note.CreateUser (uf)
     return r
-    
-def testReCreateUserPassword():
-    uf={"name":"tests",
-        "mail":"maple@forer.cn"
-    }
-    print(Note.ReCreateUserPassword(uf))
-    return 0
-    
-def testChangeUserPassword():
-    shapassword = hashlib.sha256()
-    shapassword.update(("79640d04-9362-3a2d-95bd-9a5d533e48de").encode('utf-8'))
-    uf={"name":"tests",
-        "password":shapassword.hexdigest(),
-        "newpassword":"123456"
-    }
-    print(Note.ChangeUserPassword(uf))
-    return 0    
 ###########################
 #  
 #sqllib检查
@@ -203,13 +186,6 @@ def TestPassword (Password):#检查密码是否合法
         return True
     else:
         return False   
-
-def TestExtend (name,*l):#快速查询uid，right，group
-    uf={}
-    print(l)
-    usercolumn=['uid','right','group']
-    usercolumn.extend(l)
-    return(usercolumn)
 ###########################
 #  
 #Mail检查
@@ -218,7 +194,7 @@ def TestExtend (name,*l):#快速查询uid，right，group
 def TestSend ():#检查密码是否合法
     r = mail.Send('maple@forer.cn','title','artical')
     return r
-print(TestEditArtical())
+print(TestSend ())
 # try:
     # TestFastCreatArtical()
     # print("TestFastCreatArtical")
