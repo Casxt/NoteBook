@@ -22,7 +22,8 @@ def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
     uf["id"] = 0
     if uf["title"].isdigit():
         uf["id"] = uf["title"]
-    uf["uid"] = uf.get("uid",PUBLICUSER)
+    #uf["uid"] = uf.get("uid",PUBLICUSER)
+    uf["name"] = uf.get("name",PUBLICUSER)
     try:
         artical = sqllib.GetArtical(uf)
         #print("GetArtical",artical)
@@ -269,8 +270,9 @@ def ReCreateUserPassword(uf):#重置密码用户名
             newpassword = str(uuid.uuid3(uuid.uuid1(), uf['mail']))
             info["password"] = newpassword
             info = CreateSaltAndPassword(info)
-            sqllib.ResetPassword (info)
+            sqllib.ResetPassword (info)#重置密码
             mail.Send(uf["mail"],MAIL_TITLE_RSPASSWORD,MAIL_ARTICAL_RSPASSWORD%(newpassword))
+            sqllib.CleanFailedTimes (info)#清空登录计数
             return (True,"success")
         else:
             return (False,"Mail Not Match")

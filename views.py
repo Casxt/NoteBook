@@ -184,7 +184,7 @@ def checklogininfo(request,dict):#检查登录信息，客户端应传回name字
             dict["uid"]=request.session["uid"]#找到uid
             return (dict,True)
         else:
-            dict.pop("name","del name failed")
+            #dict.pop("name","del name failed")
             dict.pop("uid","del uid failed")
             return (dict,False)
     else:

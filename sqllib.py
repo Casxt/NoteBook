@@ -111,7 +111,7 @@ def LoginFailed (uf):#登录失败计数
     return True
     
 def CleanFailedTimes (uf):#登录成功清除计数
-    #id,uid,name
+    #name
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     sql =  """update """+TABLE["user"]+""" SET `lgnfailedtimes`=0,`lastfailedtime`=now() WHERE `name`=%s """
@@ -138,6 +138,22 @@ def ResetPassword (uf):#重置密码
 #文章操作
 #
 ####################################
+def GetRemark (uid,title,cursor,*l):#快速查询remark 等
+    af={}
+    usercolumn=['remark','right']
+    usercolumn.extend(l)
+    SqlUserField = str(usercolumn).replace("'","`")[1:-1]
+    sql =  """select """+SqlUserField+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s"""
+    cursor.execute(sql,(uid,title))
+    value = cursor.fetchone()
+    if value is not None:
+        af = dict(map(lambda x,y:[x,y],usercolumn,value))
+    elif value is None:
+        return("No Such Uid %s Title %s"%(uid,title))
+    else:
+        return("GetRemark Failed")
+    return af
+    
 def b64(text):
     if text is None:
         return None
@@ -224,8 +240,8 @@ def GetArtical (af):#直接获取文章信息
     ######
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND  (`id`=%s OR `title`=%s)"""
-    cursor.execute(sql,(af["uid"],af.get("id",None),af.get("title",None)))
+    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND  (`id`=%s OR `title`=%s)"""
+    cursor.execute(sql,(af["name"],af.get("id",None),af.get("title",None)))
     value = cursor.fetchone()
     cursor.close()
     conn.commit()

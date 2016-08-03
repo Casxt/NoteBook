@@ -21,23 +21,29 @@ function setCookie(c_name, value, expiredays) {
     exdate.setDate(exdate.getDate() + expiredays);
     document.cookie = c_name + "=" + escape(value) + ((expiredays == null) ? "": ";expires=" + exdate.toGMTString()); // + ";path=/"
 }
+function setDefaultCookie(c_name, value, expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = c_name + "=" + escape(value) + ((expiredays == null) ? "": ";expires=" + exdate.toGMTString()) + ";path=/ "; // 
+}
 function getUTCzone() {
     var d = new Date();
     utc = d.getTimezoneOffset() / 60;
     return utc;
 }
-var csrftoken = getCookie('csrftoken');
+//var csrftoken = getCookie('csrftoken');
 //处理cookie
 //初始化显示内容
 $(document).ready(function() {
     checkloginstate();
+    //alert(document.cookie);
     checkeurl();
 });
 //检查登录状态
 function checkloginstate() {
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/chkls/',
@@ -51,8 +57,8 @@ function checkloginstate() {
             } else { //未登录即注销当前用户信息
                 $("#navbar-userinfo").hide();
                 $("#open-login").show();
-                setCookie("name", "", 0);
-                setCookie("login", 0);
+                setDefaultCookie("name", "", 0);
+                setDefaultCookie("login", 0);
                 $("#header-search-buttom").hide();
                 $("#header-search").hide();
             }
@@ -62,8 +68,8 @@ function checkloginstate() {
 }
 //登录成功时的动作
 function afterlogin(data) {
-    setCookie("name", data.name);
-    setCookie("login", 1);
+    setDefaultCookie("name", data.name);
+    setDefaultCookie("login", 1);
     $("#open-login").hide();
     $("#header-search-buttom").show();
     $("#header-search").show();
@@ -131,6 +137,8 @@ function autogetartical() {
     var path = window.location.pathname;
     var matchpath2 = /^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
+    var cookie_name = unescape(getCookie("name"));
+    var isuser = true;
     a[2] = decodeURI(a[2]);
     a[4] = decodeURI(a[4]);
     $("#title-editer").hide();
@@ -138,14 +146,17 @@ function autogetartical() {
     document.getElementById("showtitle").innerHTML = "Loading...";
     document.getElementById("showartical").innerHTML = "";
     if (a[2] != "undefined" && a[4] != "undefined") {
-        var name = a[1];
+        var name_path = a[1];
         var postdata = {
             "name": a[2],
             "title": a[4],
             "password": sha256($("#Modal-artical-passwords").val()),
         };
+        if (cookie_name!=a[2]){
+            isuser = false;
+        }
     } else if (a[2] != "undefined" && a[4] == "undefined") {
-        var name = "";
+        var name_path = "";
         var postdata = {
             "title": a[2],
             "password": sha256($("#Modal-artical-passwords").val()),
@@ -160,7 +171,7 @@ function autogetartical() {
     var pas = $("#Modal-artical-passwords").val();
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/getartical/',
@@ -173,8 +184,8 @@ function autogetartical() {
                 $("#text-artical").val(data.essay);
                 var title = data.title;
                 var essay = data.essay;
-                var href =  encodeURI(name + title);
-                document.getElementById("showtitle").innerHTML = '<a " href="/e/' + href + '/">' + title + '</a>';
+                var href =  encodeURI(name_path + title);
+                document.getElementById("showtitle").innerHTML = isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title;
                 document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
                 document.getElementById("text-pubtime").value = data.pubtime;
                 document.getElementById("text-lastesttime").value = data.lastesttime;
@@ -196,7 +207,7 @@ function getarticallist() { //获取文章列表
     var path = window.location.pathname;
     var matchpath2 = /(^\/l(ist)?\/((\D[\S\s]+?)\/)?)((\d+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
-    var pagepath = a[1]
+    var pagepath = a[1];
     var page=a[6]?a[6]:1;
     var name = a[3]?a[3]:"";//此处name带"/"，空时为undefined
     a[4] = decodeURI(a[4]);//此处name不带"/"
@@ -221,7 +232,7 @@ function getarticallist() { //获取文章列表
     }
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/getarticallist/',
@@ -230,7 +241,7 @@ function getarticallist() { //获取文章列表
         success: function(data) {
             if (data.state == "success") {
                 list = data.articallist;
-                var count = Math.ceil(data.count/20)
+                var count = Math.ceil(data.count/20);
                 var title = "";
                 for (i in list) {
                     title = list[i].title;
@@ -248,8 +259,8 @@ function getarticallist() { //获取文章列表
                         pagehtml.innerHTML = pagehtml.innerHTML + '<li><a href="'+pagepath+i+'">'+i+'</a></li>';
                     }
                 }
-                if (a[3] != getCookie("name")) {
-                    $(".artical-delete").hide()
+                if (a[4] != getCookie("name")) {
+                    $(".artical-delete").hide();
                 }
             } else {
                 alert(data.state);
@@ -265,7 +276,7 @@ function SearchArtical() {
     document.getElementById("search-warning").innerHTML = "Loading...";
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/search/',
@@ -293,7 +304,7 @@ function SearchArtical() {
                         var href =  encodeURI(name + title);
                         html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
                                                                 <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + '\
-                                                                <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
+                                                                <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
                                                                 <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
                                                                 </a>'
                     }
@@ -307,68 +318,78 @@ function EditArtical() {
     var path = window.location.pathname;
     var matchpath2 = /^\/e(dit)?\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
+    var cookie_name = unescape(getCookie("name"));
     a[3] = decodeURI(a[3]);
     a[5] = decodeURI(a[5]);
     var isname = 0
-    if (a[3] != "undefined" && a[5] != "undefined") {
-        postdata = {
-            "name": a[3],
-            "title": a[5],
-            "mode": "edit",
-        }
-        isname = 1
-    } else if (a[3] != "undefined" && a[5] == "undefined") {
-        postdata = {
-            "title": a[3],
-            "mode": "edit",
-        }
-    }
-    $.ajax({
-        beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
-        },
-        type: 'POST',
-        url: '/getartical/',
-        data: postdata,
-        dataType: 'json',
-        success: function(data) {
-            if (data.state=="success"){//有该文章
-                title = data.title;
-                essay = data.essay;
-                edittitle = unescape(getCookie("title"))
-                editessay = unescape(getCookie("essay"))
-                if (edittitle == "null" && editessay == "null"){
-                    edittitle = title;
-                    editessay = essay;
+        if (a[3] != "undefined" && a[5] != "undefined") {
+            if(cookie_name==a[3]){//有调用名称时检查编辑的文章是否是该用户的
+                postdata = {
+                    "name": a[3],
+                    "title": a[5],
+                    "mode": "edit",
                 }
-                $("#text-title").val(edittitle);
-                $("#text-artical").val(editessay);
-                document.getElementById("showtitle").innerHTML = title;
-                document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
-                document.getElementById("text-submit").id = "text-edit-submit";
-                document.getElementById("text-edit-submit").value = title;
-                document.getElementById("text-pubtime").value = data.pubtime;
-                document.getElementById("text-lastesttime").value = data.lastesttime;
-                document.getElementById("text-id").value = data.id;
-                if (a[6] == undefined) {
-                    document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
-                } else {
-                    document.getElementById("text-edit-submit").path = "/" + a[2] + a[4] + a[6];
-                }
-                if (isname) {
-                    document.getElementById("text-edit-submit").name = a[3];
-                }
-                return (data);
-            }else{//无该文章
+                isname = 1
+            }else{
                 $("#title-editer").hide();
                 $("#essay-editer").hide();
-                title = "No Such Artical";
-                essay = "You Can't Edit The Artical Not Exist";
+                title = "No Enough Rights";
+                essay = "You Can't Edit Other User's Artical";
                 document.getElementById("showtitle").innerHTML = title;
                 document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
             }
+        } else if (a[3] != "undefined" && a[5] == "undefined") {
+            postdata = {
+                "title": a[3],
+                "mode": "edit",
+            }
         }
-    });
+        $.ajax({
+            beforeSend: function(request) {
+                request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+            },
+            type: 'POST',
+            url: '/getartical/',
+            data: postdata,
+            dataType: 'json',
+            success: function(data) {
+                if (data.state=="success"){//有该文章
+                    title = data.title;
+                    essay = data.essay;
+                    edittitle = unescape(getCookie("title"))
+                    editessay = unescape(getCookie("essay"))
+                    if (edittitle == "null" && editessay == "null"){
+                        edittitle = title;
+                        editessay = essay;
+                    }
+                    $("#text-title").val(edittitle);
+                    $("#text-artical").val(editessay);
+                    document.getElementById("showtitle").innerHTML = title;
+                    document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                    document.getElementById("text-submit").id = "text-edit-submit";
+                    document.getElementById("text-edit-submit").value = title;
+                    document.getElementById("text-pubtime").value = data.pubtime;
+                    document.getElementById("text-lastesttime").value = data.lastesttime;
+                    document.getElementById("text-id").value = data.id;
+                    if (a[6] == undefined) {
+                        document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
+                    } else {
+                        document.getElementById("text-edit-submit").path = "/" + a[2] + a[4] + a[6];
+                    }
+                    if (isname) {
+                        document.getElementById("text-edit-submit").name = a[3];
+                    }
+                    return (data);
+                }else{//无该文章
+                    $("#title-editer").hide();
+                    $("#essay-editer").hide();
+                    title = "No Such Artical";
+                    essay = "You Can't Edit The Artical Not Exist";
+                    document.getElementById("showtitle").innerHTML = title;
+                    document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                }
+            }
+        });
 }
 
 //监控回车搜素
@@ -471,17 +492,21 @@ function titleshow() //过滤标题关键字
         return false;
     }
 }
-//监控修改
+//监控提交修改
 $(document).on('click', '#text-edit-submit',
 function() { //提交文章
     var path = window.location.pathname
+    var name = document.getElementById("text-edit-submit").name;
+    var rawtitle = document.getElementById("text-edit-submit").value;
+    var title = $("#text-title").val();
+    var essay = $("#text-artical").val();
     var postdata = {
-        "title": $("#text-title").val(),
-        "essay": $("#text-artical").val(),
+        "title": title,
+        "essay": essay,
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
-        "name": document.getElementById("text-edit-submit").name,
-        "rawtitle": document.getElementById("text-edit-submit").value,
+        "name": name,
+        "rawtitle": rawtitle,
     };
     if ($('#text-password').attr("disabled") == "disabled") {
         delete(postdata["password"]);
@@ -490,7 +515,7 @@ function() { //提交文章
         //alert(titleshow());
         $.ajax({
             beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
+                request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
             url: '/editartical/',
@@ -500,7 +525,10 @@ function() { //提交文章
                 if (data.state == "success") {
                     setCookie((path=="/")?"newtitle":"title", "", 0);
                     setCookie((path=="/")?"newessay":"essay", "", 0);
-                    window.location.href = document.getElementById("text-edit-submit").path;
+                    //window.location.href = document.getElementById("text-edit-submit").path;
+                    //不加括号会导致加法结合有误
+                    //alert("/"+(name==""?"":name+"/")+title);
+                    window.location.href = "/"+(name==""?"":name+"/")+title;
                 } else {
                     alert(data.state);
                 }
@@ -538,7 +566,7 @@ function() {
     }
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/submitartical/',
@@ -570,7 +598,7 @@ function() { //提交文章
     $(this).html('<span id="search-warning" class="label label-warning">Deleteing...</span>');
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/deleteartical/',
@@ -600,7 +628,7 @@ $("#login-bottom").click(function() { //提交登录
     document.getElementById("login-bottom").innerHTML = "Checking...";
     $.ajax({
         beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', csrftoken);
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
         url: '/login/',
@@ -614,8 +642,8 @@ $("#login-bottom").click(function() { //提交登录
                 document.getElementById("login-bottom").className = "btn btn-danger";
                 document.getElementById("login-bottom").innerHTML = data.state;
             } else if (data.state == "success") {
-                setCookie("login", 1);
-                setCookie("name", data.name);
+                setDefaultCookie("login", 1);
+                setDefaultCookie("name", data.name);
                 document.getElementById("login-bottom").className = "btn btn-success";
                 document.getElementById("login-bottom").innerHTML = "Success";
                 $('#Modal-Login').modal('hide');
@@ -684,8 +712,8 @@ function logout() {
             } else if (data.info == "success") { //成功退出
                 $("#navbar-userinfo").hide();
                 $("#open-login").show();
-                setCookie("login", 0, 0);
-                setCookie("name", "", 0);
+                setDefaultCookie("login", 0, 0);
+                setDefaultCookie("name", "", 0);
                 window.location.href = window.location.pathname;
             }
         }
@@ -753,7 +781,7 @@ function() //提交注册
         document.getElementById("register-Signup").innerHTML = "Loading...";
         $.ajax({
             beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
+                request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
             url: '/register/',
@@ -911,7 +939,7 @@ function() {
         document.getElementById("change-password-submit").innerHTML = "Changing...";
         $.ajax({
             beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
+                request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
             url: '/changepassword/',
@@ -961,7 +989,7 @@ function() {
         document.getElementById("reset-submit").innerHTML = "Reseting...";
         $.ajax({
             beforeSend: function(request) {
-                request.setRequestHeader('X-CSRFToken', csrftoken);
+                request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
             url: '/resetpassword/',
