@@ -22,13 +22,13 @@ WAITETIME=0.1
 #失败惩罚倍数（WAITENUM的n-3次方）
 WAITENUM=2
 #邮件发送地址
-MAIL_FROM_ADDR = "maple@forer.cn"
+MAIL_FROM_ADDR = ""
 #smtp服务器密码
-MAIL_PASSWORD = '951753qwe'
+MAIL_PASSWORD = ''
 #收件地址
-MAIL_TO_ADDR = '774714620@qq.com'
+MAIL_TO_ADDR = ''
 #smtp服务器
-MAIL_SMTP_SERVER = 'smtp.qq.com'
+MAIL_SMTP_SERVER = ''
 #注册邮件内容
 MAIL_ARTICAL = 'hello, send by Python...'
 MAIL_ARTICAL_SIGNIN = """你注册了新的NoteBook账号，请点击以下网址完成注册："""
