@@ -1,7 +1,18 @@
 //处理cookie
 //alert(window.location.pathname);
 //系统关键search
+//
+////////////////
+//
+//常量
+//
+////////////////
+var MINTITLELENGTH = 2
+var MAXTITLELENGTH = 200
+var MINESSAYLENGTH = 10
+var MAXESSAYLENGTH = 10000
 var path = window.location.pathname
+
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -440,24 +451,23 @@ function CheckSearchInput() {
 //监控文章修改
 $(document).on('change', '#text-artical,#attributer',
 function() {
-    articalshow()
+    articalshow();
 });
 function articalshow() //过滤文章关键字
 {
     var path = window.location.pathname
-    var word = document.getElementById("text-artical").value;
+    var essay = document.getElementById("text-artical").value;
     var title = document.getElementById("text-title").value;
-    word = word.replace(/<script/g, "").replace(/script>/g, "");
-    word = word.replace(/<iframe/g, "").replace(/iframe>/g, "");
-    word = word.replace(/<link/g, "");
-    word = word.replace(/<style/g, "").replace(/style>/g, "");
-    word = word.replace(/<frameset/g, "").replace(/frameset>/g, "");
-    document.getElementById("text-artical").value = word;
+    essay = essay.replace(/<script/g, "").replace(/script>/g, "");
+    essay = essay.replace(/<iframe/g, "").replace(/iframe>/g, "");
+    essay = essay.replace(/<link/g, "");
+    essay = essay.replace(/<style/g, "").replace(/style>/g, "");
+    essay = essay.replace(/<frameset/g, "").replace(/frameset>/g, "");
+    document.getElementById("text-artical").value = essay;
     //document.getElementById("showartical").innerHTML = word.replace(/\n/g, "<br>");
-    document.getElementById("showartical").innerHTML = FormatEssay(word,$('#text-type option:selected').val());
-    setCookie((path=="/")?"newessay":"essay", escape(word), 30);
-    var artical = word;
-    if (artical.length > 10 && artical.length < 5000 && title.length > 2 && title.length < 100) {
+    document.getElementById("showartical").innerHTML = FormatEssay(essay,$('#text-type option:selected').val());
+    setCookie((path=="/")?"newessay":"essay", escape(essay), 30);
+    if (essay.length >= MINESSAYLENGTH && essay.length <= MAXESSAYLENGTH && title.length >= MINTITLELENGTH && title.length <= MAXTITLELENGTH) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
         $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");
         $("#text-submit,#text-edit-submit").text("提交");
@@ -478,15 +488,14 @@ function() {
 function titleshow() //过滤标题关键字
 {
     var path = window.location.pathname
-    var word = document.getElementById("text-title").value;
-    var artical = document.getElementById("text-artical").value;
-    word = word.replace(/<|>/g, "");
-    word = word.replace(/\s+/g, " ");
-    document.getElementById("text-title").value = word;
-    document.getElementById("showtitle").innerHTML = word;
-    var title = word;
-    setCookie((path=="/")?"newtitle":"title", escape(word), 30);
-    if (artical.length > 10 && artical.length < 5000 && title.length > 2 && title.length < 100) {
+    var title = document.getElementById("text-title").value;
+    var essay = document.getElementById("text-artical").value;
+    title = title.replace(/<|>/g, "");
+    title = title.replace(/\s+/g, " ");
+    document.getElementById("text-title").value = title;
+    document.getElementById("showtitle").innerHTML = title;
+    setCookie((path=="/")?"newtitle":"title", escape(title), 30);
+    if (essay.length >= MINESSAYLENGTH && essay.length <= MAXESSAYLENGTH && title.length >= MINTITLELENGTH && title.length <= MAXTITLELENGTH) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
         $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");
         $("#text-submit,#text-edit-submit").text("提交");
@@ -553,9 +562,11 @@ function() { //提交文章
 $(document).on('click', '#text-submit',
 function() {
     var path = window.location.pathname
+    var title = document.getElementById("text-title").value;
+    var essay = document.getElementById("text-artical").value;
     var postdata = {
-        "title": $("#text-title").val(),
-        "essay": $("#text-artical").val(),
+        "title": title,
+        "essay": essay,
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
         "name": getCookie("name"),
@@ -595,9 +606,12 @@ function() {
             }
         }
     });
-    }else{
+    }else if(essay.length < MINESSAYLENGTH || title.length < MINTITLELENGTH){
         document.getElementById("text-submit").className = "btn btn-danger";
         document.getElementById("text-submit").innerHTML = "内容过少";
+    }else if(essay.length > MAXESSAYLENGTH || title.length > MAXTITLELENGTH){
+        document.getElementById("text-submit").className = "btn btn-danger";
+        document.getElementById("text-submit").innerHTML = "内容过多";
     }
 });
 //监控删除
@@ -1046,6 +1060,7 @@ function FormatEssay(essay,type) {
 
 function FormatHtmlText(essay) {
     essay = essay.replace(/\n/g, "<br>");
+    essay = essay.replace(/\ /g,"&nbsp;"); 
     return essay;
 }
 
@@ -1065,11 +1080,15 @@ function FormatText(essay) {
 }
 
 function FormatJson(essay) {
-    essay = essay;
+    essay = JSON.parse(essay);
+    essay = JSON.stringify(essay, null, 4);
+    essay = essay.replace(/\n/g, "<br>");
+    essay = essay.replace(/\ /g,"&nbsp;"); 
     return essay;
 }
 
 function FormatMarkdown(essay) {
-    essay = essay;
+    var md = window.markdownit();
+    essay = md.render(essay);
     return essay;
 }
