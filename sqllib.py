@@ -175,7 +175,7 @@ def FastCreatArtical (af):#快速创建文章
     return True
 
 def CreatArtical (af):#创建文章
-    Articalcolumn = ('title','uid','name','essay','tag','right','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
+    Articalcolumn = ('title','uid','name','essay','type','tag','right','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
@@ -192,15 +192,15 @@ def CreatArtical (af):#创建文章
     else:
         return("CreatArtical Failed")
     #创建文章
-    sql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
-    cursor.execute(sql,(af["title"],af["uid"],af["name"],af["essay"],af.get("tag",None),af.get("right",0),af.get("blgroup",None),af.get("salt",None),af.get("saltpassword",None),af.get("remark",None)))
+    sql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
+    cursor.execute(sql,(af["title"],af["uid"],af["name"],af["essay"],af.get("type",DEFAULTARTICALTYPE),af.get("tag",None),af.get("right",0),af.get("blgroup",None),af.get("salt",None),af.get("saltpassword",None),af.get("remark",None)))
     cursor.close()
     conn.commit()
     conn.close()
     return True    
 
 def EditArtical (af):
-    ARTICALFIELD=('title','essay','tag','right','blgroup','salt','saltpassword','remark')
+    ARTICALFIELD=('title','essay','type','tag','right','blgroup','salt','saltpassword','remark')
     #拼接set语句
     SetUpdateColumn = ""
     SetUpdateInfo=[]
@@ -233,7 +233,7 @@ def EditArtical (af):
         return num
 
 def GetArtical (af):#直接获取文章信息
-    Articalcolumn=('id','uid','name','title','essay','tag','right','blgroup','pubtime','lastesttime','salt','saltpassword')
+    Articalcolumn=('id','uid','name','title','essay','type','tag','right','blgroup','pubtime','lastesttime','salt','saltpassword')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
@@ -253,7 +253,7 @@ def GetArtical (af):#直接获取文章信息
 
 def GetArticalList (af):#获取文章列表
     #af应有page一项,eachpage
-    Articalcolumn=('id','name','title','tag','saltpassword','right','blgroup','pubtime','lastesttime')#,'essay'
+    Articalcolumn=('id','name','title','type','tag','saltpassword','right','blgroup','pubtime','lastesttime')#,'essay'
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
@@ -283,7 +283,7 @@ def CountArticalList (af):#获取用户文章数目
     return values
     
 def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
-    Articalcolumn=('id','name','title','essay','right','blgroup','pubtime','lastesttime')
+    Articalcolumn=('id','name','title','essay','type','right','blgroup','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
@@ -360,6 +360,7 @@ def DefineArticalTable ():#文章表
             `name`  varchar(40) CHARACTER SET utf8 NOT NULL ,
             `title`  varchar(100) CHARACTER SET utf8 NOT NULL ,
             `essay`  longtext CHARACTER SET utf8 NOT NULL ,
+            `type`  varchar(40) CHARACTER SET utf8 NOT NULL ,
             `tag`  text CHARACTER SET utf8 NULL ,
             `right`  int DEFAULT 0,
             `blgroup`  varchar(255) CHARACTER SET utf8 NULL ,

@@ -74,8 +74,23 @@
        </div> 
       </div> 
       <!--文章tag --> 
+      <!--文章type --> 
+      <!--id/文章提交/编辑日期 --> 
+      <div class="col-lg-4" style="padding-bottom: 1em;"> 
+      <div class="input-group"> 
+        <span class="input-group-addon">类型:</span> 
+        <select id="text-type" class="form-control">
+          <option value ="html/text">Html/Text</option>
+          <option value ="html">Html</option>
+          <option value ="markdown">Markdown</option>
+          <option value ="text">Text</option>
+          <option value ="json">Json</option>
+        </select>
+      </div> 
+      </div> 
+      <!--文章type -->
       <!--文章group --> 
-      <div class="col-sm-6" style="padding-bottom: 1em;"> 
+      <div class="col-sm-4" style="padding-bottom: 1em;"> 
        <div class="input-group"> 
         <span class="input-group-addon">group:</span> 
         <input type="text" disabled="disabled" class="form-control" placeholder="暂未启用" /> 
@@ -84,7 +99,7 @@
       </div> 
       <!--文章group --> 
       <!--文章right --> 
-      <div class="col-sm-6" style="padding-bottom: 1em;"> 
+      <div class="col-sm-4" style="padding-bottom: 1em;"> 
        <div class="input-group"> 
         <span class="input-group-addon">right:</span> 
         <input type="text" class="form-control" disabled="disabled" placeholder="暂未启用" /> 

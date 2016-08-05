@@ -116,8 +116,9 @@ function checkeurl() {
 }
 //自动加载文章
 function autoloadartical() {
-    var essay = unescape(getCookie('essay'));
-    var title = unescape(getCookie('title'));
+    var path = window.location.pathname;
+    var essay = unescape(getCookie((path=="/")?"newessay":"essay"));
+    var title = unescape(getCookie((path=="/")?"newtitle":"title"));
     if (essay != 'null' && essay != "") {
         document.getElementById("text-artical").value = essay;
         document.getElementById("showartical").innerHTML = essay;
@@ -186,10 +187,12 @@ function autogetartical() {
                 var essay = data.essay;
                 var href =  encodeURI(name_path + title);
                 document.getElementById("showtitle").innerHTML = isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title;
-                document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                //document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                document.getElementById("showartical").innerHTML = FormatEssay(essay,data.type);
                 document.getElementById("text-pubtime").value = data.pubtime;
                 document.getElementById("text-lastesttime").value = data.lastesttime;
                 document.getElementById("text-id").value = data.id;
+                $("#text-type").val(data.type);
             } else if (data.state == "Need Password") {
                 $("#Modal-artical-password").modal("show");
                 document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
@@ -336,7 +339,7 @@ function EditArtical() {
                 title = "No Enough Rights";
                 essay = "You Can't Edit Other User's Artical";
                 document.getElementById("showtitle").innerHTML = title;
-                document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                document.getElementById("showartical").innerHTML = FormatEssay(essay,"html/text");
             }
         } else if (a[3] != "undefined" && a[5] == "undefined") {
             postdata = {
@@ -354,8 +357,8 @@ function EditArtical() {
             dataType: 'json',
             success: function(data) {
                 if (data.state=="success"){//有该文章
-                    title = data.title;
-                    essay = data.essay;
+                    var title = data.title;
+                    var essay = data.essay;
                     edittitle = unescape(getCookie("title"))
                     editessay = unescape(getCookie("essay"))
                     if (edittitle == "null" && editessay == "null"){
@@ -365,12 +368,14 @@ function EditArtical() {
                     $("#text-title").val(edittitle);
                     $("#text-artical").val(editessay);
                     document.getElementById("showtitle").innerHTML = title;
-                    document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                    //document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                    document.getElementById("showartical").innerHTML = FormatEssay(essay,data.type);
                     document.getElementById("text-submit").id = "text-edit-submit";
                     document.getElementById("text-edit-submit").value = title;
                     document.getElementById("text-pubtime").value = data.pubtime;
                     document.getElementById("text-lastesttime").value = data.lastesttime;
                     document.getElementById("text-id").value = data.id;
+                    $("#text-type").val(data.type);
                     if (a[6] == undefined) {
                         document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
                     } else {
@@ -386,7 +391,8 @@ function EditArtical() {
                     title = "No Such Artical";
                     essay = "You Can't Edit The Artical Not Exist";
                     document.getElementById("showtitle").innerHTML = title;
-                    document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                    //document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
+                    document.getElementById("showartical").innerHTML = FormatEssay(word,"html/text");
                 }
             }
         });
@@ -432,7 +438,7 @@ function CheckSearchInput() {
 //提交
 
 //监控文章修改
-$(document).on('change', '#text-artical',
+$(document).on('change', '#text-artical,#attributer',
 function() {
     articalshow()
 });
@@ -447,7 +453,8 @@ function articalshow() //过滤文章关键字
     word = word.replace(/<style/g, "").replace(/style>/g, "");
     word = word.replace(/<frameset/g, "").replace(/frameset>/g, "");
     document.getElementById("text-artical").value = word;
-    document.getElementById("showartical").innerHTML = word.replace(/\n/g, "<br>");
+    //document.getElementById("showartical").innerHTML = word.replace(/\n/g, "<br>");
+    document.getElementById("showartical").innerHTML = FormatEssay(word,$('#text-type option:selected').val());
     setCookie((path=="/")?"newessay":"essay", escape(word), 30);
     var artical = word;
     if (artical.length > 10 && artical.length < 5000 && title.length > 2 && title.length < 100) {
@@ -507,6 +514,7 @@ function() { //提交文章
         "tag": $("#text-tag").val(),
         "name": name,
         "rawtitle": rawtitle,
+        "type":$('#text-type option:selected').val()
     };
     if ($('#text-password').attr("disabled") == "disabled") {
         delete(postdata["password"]);
@@ -551,6 +559,7 @@ function() {
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
         "name": getCookie("name"),
+        "type":$('#text-type option:selected').val()
     };
     if ($('#text-password').attr("disabled") == "disabled") {
         delete(postdata["password"]);
@@ -1010,3 +1019,57 @@ function() {
         });
     }
 });
+
+
+
+//////////////////////
+//
+//显示格式化函数
+//
+/////////////////////
+function FormatEssay(essay,type) {
+    if (type=='html/text'){
+        essay = FormatHtmlText(essay);
+    }else if(type=='html'){
+        essay = FormatHtml(essay);
+    }else if(type=='text'){
+        essay = FormatText(essay);
+    }else if(type=='markdown'){
+        essay = FormatMarkdown(essay);
+    }else if(type=='json'){
+        essay = FormatJson(essay);
+    }else{
+        essay = FormatHtmlText(essay);
+    }
+    return essay;
+}
+
+function FormatHtmlText(essay) {
+    essay = essay.replace(/\n/g, "<br>");
+    return essay;
+}
+
+function FormatHtml(essay) {
+    return essay;
+}
+
+function FormatText(essay) {
+    essay = essay.replace(/\&/g,"&gt;");  
+    essay = essay.replace(/</g,"&#60;");  
+    essay = essay.replace(/>/g,"&#62;");  
+    essay = essay.replace(/\ /g,"&nbsp;");  
+    essay = essay.replace(/\'/g,"'");  
+    essay = essay.replace(/\"/g,"&quot;");  
+    //essay = essay.replace(/\n/g," <br>"); 
+    return essay;
+}
+
+function FormatJson(essay) {
+    essay = essay;
+    return essay;
+}
+
+function FormatMarkdown(essay) {
+    essay = essay;
+    return essay;
+}
