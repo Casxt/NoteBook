@@ -268,7 +268,9 @@ def GetArticalList (af):#获取文章列表
     conn.close()
     result = []
     for value in values:
-        result.append(dict(zip(Articalcolumn,value)))
+        d = dict(zip(Articalcolumn,value))
+        d["ifpassword"] = False if (d["saltpassword"]==None) else True
+        result.append(d)
     return result
 
 def CountArticalList (af):#获取用户文章数目

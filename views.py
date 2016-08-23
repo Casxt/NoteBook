@@ -63,9 +63,9 @@ def deleteartical(request):
         (dict,logined) = checklogininfo(request,dict)#
         if logined:
             if "title" in dict:
-                artical = Note.DeleteArticalByNameTitle(dict)
-                print(artical)
-                return HttpResponse(json.dumps({"state":artical}))
+                state = Note.DeleteArticalByNameTitle(dict)
+                print('deleteartical',json.dumps({"state":state}))
+                return HttpResponse(json.dumps({"state":state}))
             else:
                 return HttpResponse(json.dumps({"state":"Title Not Found"}))
         return HttpResponse(json.dumps({"state":"Name err"}))

@@ -10,7 +10,7 @@
 var MINTITLELENGTH = 2
 var MAXTITLELENGTH = 200
 var MINESSAYLENGTH = 10
-var MAXESSAYLENGTH = 10000
+var MAXESSAYLENGTH = 50000
 var path = window.location.pathname
 
 function getCookie(name) {
@@ -259,12 +259,15 @@ function getarticallist() { //获取文章列表
                 var title = "";
                 for (i in list) {
                     title = list[i].title;
+                    var ifpassword = list[i].ifpassword;
                     var href =  encodeURI(name + title);
                     html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
-                                                            <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span><strong>' + title + '</strong>\
+                                                            <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
+                                                            '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
+                                                            <strong>' + title + '</strong>\
                                                             <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                            <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
-                                                            </a>';
+                                                            <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
+                                                            <span class="glyphicon glyphicon-edit"></span></button></a>';
                 }
                 for (i=1;i<=count;i++) {
                     if (i==page){
@@ -313,14 +316,16 @@ function SearchArtical() {
                     $("#title-editer").hide();
                     $("#essay-editer").hide();
                     $("#shower").hide();
+                    var cookiename = getCookie("name");
                     for (i in list) {
                         title = list[i].title;
+                        name = list[i].name?(list[i].name+"/"):"";
                         var href =  encodeURI(name + title);
                         html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
-                                                                <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + '\
+                                                                <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
                                                                 <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit"><span class="glyphicon glyphicon-edit"></span></button>\
-                                                                </a>'
+                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
+                                                                <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
                     }
                 }
             }
@@ -617,6 +622,7 @@ function() {
 //监控删除
 $(document).on('click', '.artical-delete',
 function() { //提交文章
+    var thisitem = $(this)
     var title = $(this).val();
     $(this).html('<span id="search-warning" class="label label-warning">Deleteing...</span>');
     $.ajax({
@@ -632,8 +638,9 @@ function() { //提交文章
         dataType: 'json',
         success: function(data) {
             if (data.state == "success") {
-                $(this).html('<span id="search-warning" class="label label-success">success</span>');
-                $(("#" + title)).hide();
+                thisitem.html('<span id="search-warning" class="label label-success">success</span>');
+                thisitem.parent().hide();
+                //$(("#" + title)).hide();
             } else {
                 alert(data.state);
             }
@@ -1049,9 +1056,17 @@ function FormatEssay(essay,type) {
     }else if(type=='text'){
         essay = FormatText(essay);
     }else if(type=='markdown'){
-        essay = FormatMarkdown(essay);
+        try{
+            essay = FormatMarkdown(essay);
+          }catch(err){
+            essay = err;
+          }
     }else if(type=='json'){
-        essay = FormatJson(essay);
+        try{
+            essay = FormatJson(essay);
+          }catch(err){
+            essay = err;
+          }
     }else{
         essay = FormatHtmlText(essay);
     }

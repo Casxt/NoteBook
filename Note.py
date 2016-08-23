@@ -168,7 +168,7 @@ def GetArticalList(af):
             count = sqllib.CountArticalList (af)
         except Exception as e:
             print(e)
-            return("GetArticalList未知错误",False)
+            return("GetArticalList未知错误",0,False)
         for artical in result:
             artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
             artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
@@ -180,7 +180,7 @@ def GetArticalList(af):
         #print(result)
         return(result,count,True)
     else:
-        return("Name Err",False)
+        return("Name Err",0,False)
         
 def SearchArticalList(af):
     if "name" not in af:#必须有name字段否则视为未登录，登录验证由session处理
