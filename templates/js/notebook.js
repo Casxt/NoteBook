@@ -151,8 +151,8 @@ function autogetartical() {
     var a = matchpath2.exec(path);
     var cookie_name = unescape(getCookie("name"));
     var isuser = true;
-    a[2] = decodeURI(a[2]);
-    a[4] = decodeURI(a[4]);
+    a[2] = decodeURIComponent(a[2]);
+    a[4] = decodeURIComponent(a[4]);
     $("#title-editer").hide();
     $("#essay-editer").hide();
     document.getElementById("showtitle").innerHTML = "Loading...";
@@ -260,7 +260,8 @@ function getarticallist() { //获取文章列表
                 for (i in list) {
                     title = list[i].title;
                     var ifpassword = list[i].ifpassword;
-                    var href =  encodeURI(name + title);
+                    //var href =  encodeURI(name + title);encodeURI不会对/编码
+                    var href =  encodeURIComponent(name + title);
                     html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
                                                             <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
                                                             '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
@@ -320,7 +321,7 @@ function SearchArtical() {
                     for (i in list) {
                         title = list[i].title;
                         name = list[i].name?(list[i].name+"/"):"";
-                        var href =  encodeURI(name + title);
+                        var href =  encodeURIComponent(name + title);
                         html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
                                                                 <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
                                                                 <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
