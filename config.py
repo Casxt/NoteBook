@@ -29,12 +29,19 @@ LOGINFAILEDTIMES=3
 WAITETIME=0.1
 #失败惩罚倍数（WAITENUM的n-3次方）
 WAITENUM=2
+
+#######################
+#
+#邮件设置
+#
+#######################
+
 #邮件发送地址
-MAIL_FROM_ADDR = ""
+MAIL_FROM_ADDR = "maple@forer.cn"
 #smtp服务器密码
-MAIL_PASSWORD = ''
+MAIL_PASSWORD = '951753qwe'
 #收件地址
-MAIL_TO_ADDR = ''
+MAIL_TO_ADDR = '774714620@qq.com'
 #smtp服务器
 MAIL_SMTP_SERVER = 'smtp.qq.com'
 #邮件
@@ -50,3 +57,15 @@ MAIL_ARTICAL_RSPASSWORD = """您申请了重置密码，系统为您生成了新
 #修改密码邮件
 MAIL_TITLE_CGPASSWORD = """NoteBook修改密码"""
 MAIL_ARTICAL_CGPASSWORD = """您账户的密码已经改变，若非本人操作请尽快重置密码"""
+
+
+#######################
+#
+#错误返回
+#
+#######################
+ARTICALNEEDRIGHT={
+"title":"No Enough Rights",
+"essay":"You Can't Edit Other User's Artical",
+"state":"success"
+}

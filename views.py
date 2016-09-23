@@ -182,12 +182,15 @@ def checklogininfo(request,dict):#检查登录信息，客户端应传回name字
     if "name" in dict:
         if dict["name"]==request.session.get("name","nu"):#与session用户是否相同#对自己
             dict["uid"]=request.session["uid"]#找到uid
+            dict["iflogin"]=True
             return (dict,True)
         else:
             #dict.pop("name","del name failed")
             dict.pop("uid","del uid failed")
+            dict["iflogin"]=False
             return (dict,False)
     else:
+        dict["iflogin"]=False
         return (dict,False)
 def getpostdict(request):#检查登录信息，客户端应传回name字段,判断name字段是否一致
     dict = {}

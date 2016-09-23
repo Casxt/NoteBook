@@ -11,6 +11,9 @@ var MINTITLELENGTH = 2
 var MAXTITLELENGTH = 200
 var MINESSAYLENGTH = 10
 var MAXESSAYLENGTH = 50000
+var MINSEARCHLENGTH = 40
+var MAXSEARCHLENGTH = 3
+
 var path = window.location.pathname
 
 function getCookie(name) {
@@ -196,7 +199,7 @@ function autogetartical() {
                 $("#text-artical").val(data.essay);
                 var title = data.title;
                 var essay = data.essay;
-                var href =  encodeURI(name_path + title);
+                var href =  encodeURI(name_path) + encodeURIComponent(title);
                 document.getElementById("showtitle").innerHTML = isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title;
                 //document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
                 document.getElementById("showartical").innerHTML = FormatEssay(essay,data.type);
@@ -223,8 +226,8 @@ function getarticallist() { //获取文章列表
     var a = matchpath2.exec(path);
     var pagepath = a[1];
     var page=a[6]?a[6]:1;
-    var name = a[3]?a[3]:"";//此处name带"/"，空时为undefined
-    a[4] = decodeURI(a[4]);//此处name不带"/"
+    var name = a[4]?a[4]:"";//a[3]name带"/"，空时为undefined
+    a[4] = decodeURI(a[4]);//a[4]name不带"/"
     //alert(a[5]);
     var html = document.getElementById("listshower");
     var pagehtml = document.getElementById("list-page");
@@ -261,7 +264,7 @@ function getarticallist() { //获取文章列表
                     title = list[i].title;
                     var ifpassword = list[i].ifpassword;
                     //var href =  encodeURI(name + title);encodeURI不会对/编码
-                    var href =  encodeURIComponent(name + title);
+                    var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
                     html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
                                                             <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
                                                             '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
@@ -320,8 +323,8 @@ function SearchArtical() {
                     var cookiename = getCookie("name");
                     for (i in list) {
                         title = list[i].title;
-                        name = list[i].name?(list[i].name+"/"):"";
-                        var href =  encodeURIComponent(name + title);
+                        name = list[i].name?(list[i].name):"";
+                        var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
                         html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
                                                                 <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
                                                                 <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
@@ -339,11 +342,17 @@ function EditArtical() {
     var matchpath2 = /^\/e(dit)?\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
     var cookie_name = unescape(getCookie("name"));
-    a[3] = decodeURI(a[3]);
-    a[5] = decodeURI(a[5]);
+    a[3] = decodeURIComponent(a[3]);
+    a[5] = decodeURIComponent(a[5]);
     var isname = 0
         if (a[3] != "undefined" && a[5] != "undefined") {
-            if(cookie_name==a[3]){//有调用名称时检查编辑的文章是否是该用户的
+            postdata = {
+                "name": a[3],
+                "title": a[5],
+                "mode": "edit",
+            }
+            isname = 1
+/*          if(cookie_name==a[3]){//有调用名称时检查编辑的文章是否是该用户的
                 postdata = {
                     "name": a[3],
                     "title": a[5],
@@ -357,7 +366,7 @@ function EditArtical() {
                 essay = "You Can't Edit Other User's Artical";
                 document.getElementById("showtitle").innerHTML = title;
                 document.getElementById("showartical").innerHTML = FormatEssay(essay,"html/text");
-            }
+            } */
         } else if (a[3] != "undefined" && a[5] == "undefined") {
             postdata = {
                 "title": a[3],
@@ -440,10 +449,10 @@ function() {
 function CheckSearchInput() {
     var word = $('#header-search').val();
     var len = word.replace(/\s/g, "").length;
-    if (len < 3) {
+    if (len < MINSEARCHLENGTH) {
         document.getElementById("search-warning").innerHTML = "至少3个字";
         return false;
-    } else if (word.length >= 40) {
+    } else if (word.length >= MAXSEARCHLENGTH) {
         document.getElementById("search-warning").innerHTML = "至多40个字";
         return false;
     } else {

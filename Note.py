@@ -24,6 +24,8 @@ def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
         uf["id"] = uf["title"]
     #uf["uid"] = uf.get("uid",PUBLICUSER)
     uf["name"] = uf.get("name",PUBLICUSER)
+    if uf["name"] != PUBLICUSER and uf["iflogin"]==False:
+        return ARTICALNEEDRIGHT
     try:
         artical = sqllib.GetArtical(uf)
         #print("GetArtical",artical)
