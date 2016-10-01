@@ -15,7 +15,7 @@ USERFIELD=('id','uid','name','mail','salt','saltpassword','right','articalnum','
 ARTICALFIELD=('id','uid','title','essay','type','tag','right','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
 SEARCHFIELD=('id','uid','b64title','b64essay','b64tag','right','blgroup','b64remark','pubtime','lastesttime')
 #文章类型列表
-ARTICALTYPELIST=['html/text','html','text','json','image','markdown']
+ARTICALTYPELIST=['html/text','html','text','json','image','markdown',"code"]
 #默认文章类型
 DEFAULTARTICALTYPE=ARTICALTYPELIST[0]
 #每页显示条目
@@ -64,8 +64,12 @@ MAIL_ARTICAL_CGPASSWORD = """您账户的密码已经改变，若非本人操作
 #错误返回
 #
 #######################
+#权限不足
 ARTICALNEEDRIGHT={
 "title":"No Enough Rights",
-"essay":"You Can't Edit Other User's Artical",
+"essay":"You Can't Edit Other User's Article",
 "state":"success"
+}
+ARTICLETYPEERR={
+"state":"Invalid Article Type"
 }

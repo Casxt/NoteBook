@@ -36,7 +36,7 @@ def submitartical(request):
         else:
             return HttpResponse('{"state":"%s"}'%str("请重新登录")) 
         info = Note.SubmitArtical(dict)
-        return HttpResponse('{"state":"%s"}'%str(info))  
+        return HttpResponse(json.dumps(info))  
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
@@ -48,12 +48,12 @@ def editartical(request):
             (dict,logined) = checklogininfo(request,dict)
             if logined:
                 info = Note.EditArtical(dict)
-                return HttpResponse(json.dumps({"state":str(info)}))
+                return HttpResponse(json.dumps(info))
             else:
                 return HttpResponse(json.dumps({"state":"Need Login"}))
         else:
             info = Note.EditArtical(dict)
-            return HttpResponse(json.dumps({"state":str(info)}))
+            return HttpResponse(json.dumps(info))
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie

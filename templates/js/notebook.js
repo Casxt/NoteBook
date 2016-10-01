@@ -11,9 +11,16 @@ var MINTITLELENGTH = 2
 var MAXTITLELENGTH = 200
 var MINESSAYLENGTH = 10
 var MAXESSAYLENGTH = 50000
-var MINSEARCHLENGTH = 40
-var MAXSEARCHLENGTH = 3
-
+var MINSEARCHLENGTH = 3
+var MAXSEARCHLENGTH = 40
+//文章种类
+var ARTIVLEKINDS = {"html/text":"Html/Text",
+                    "html":"Html",
+                    "markdown":"Markdown",
+                    "text":"Text",
+                    "json":"Json",
+                    "code":"Code",
+                    "test":"Test"}
 var path = window.location.pathname
 
 function getCookie(name) {
@@ -49,6 +56,7 @@ function getUTCzone() {
 //处理cookie
 //初始化显示内容
 $(document).ready(function() {
+    AutoSetArticleKinds();//先初始化页面
     checkloginstate();
     //alert(document.cookie);
     checkeurl();
@@ -98,6 +106,15 @@ function afterlogin(data) {
                                                     <li><a id="open-logout" href="/">登出</a></li>\
                                                     </ul>';
 }
+//填写文章种类
+function AutoSetArticleKinds() {
+    var kinds = "";
+    for (var kind in ARTIVLEKINDS) { 
+        kinds = kinds + "<option value ='"+kind+"'>"+ARTIVLEKINDS[kind]+"</option>";
+    } 
+    document.getElementById("text-type").innerHTML = kinds;
+}
+
 
 //检查链接
 function checkeurl() {
@@ -562,7 +579,8 @@ function() { //提交文章
                     //alert("/"+(name==""?"":name+"/")+title);
                     window.location.href = "/"+(name==""?"":name+"/")+title;
                 } else {
-                    alert(data.state);
+                    document.getElementById("text-edit-submit").className = "btn btn-danger";
+                    document.getElementById("text-edit-submit").innerHTML = data.state;
                 }
             }
         });
@@ -1059,12 +1077,15 @@ function() {
 //
 /////////////////////
 function FormatEssay(essay,type) {
+    document.getElementById('showartical').setAttribute("style", ""); 
     if (type=='html/text'){
         essay = FormatHtmlText(essay);
     }else if(type=='html'){
         essay = FormatHtml(essay);
     }else if(type=='text'){
         essay = FormatText(essay);
+    }else if(type=='code'){
+        essay = FormatCode(essay);
     }else if(type=='markdown'){
         try{
             essay = FormatMarkdown(essay);
@@ -1116,4 +1137,19 @@ function FormatMarkdown(essay) {
     var md = window.markdownit();
     essay = md.render(essay);
     return essay;
+}
+
+function FormatCode(essay) {
+    var conf = {
+    tabReplace: '    ',
+    useBR:true
+    }
+    hljs.configure(conf)
+    var py = hljs.highlightAuto(essay);
+    essay = py.value;
+    essay = hljs.fixMarkup(essay);
+    essay = essay.replace(/\  /g,"&nbsp;&nbsp;"); //以2空格为单位替换
+    document.getElementById('showartical').setAttribute("style", "background:#fdf6e3;"); 
+    return essay;
+    //background:#232323;fdf6e3
 }

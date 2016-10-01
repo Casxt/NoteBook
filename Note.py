@@ -104,18 +104,20 @@ def SubmitArtical(af):
     af["title"] = CleanTitle(af["title"])
     af["essay"] = CleanArtical(af["essay"])
     af["uid"] = af.get("uid",PUBLICUSER)
+    if af["type"] not in ARTICALTYPELIST:
+        return (ARTICLETYPEERR)
     if "password" in af:
         af = CreateSaltAndPassword(af)
     try:
         if CheckTitle(af["title"]):
             sqllib.CreatArtical (af)
-            return("success")
+            return({"state":"success"})
         else:
-            return("Title Err")
+            return({"state":"Title Err"})
     except Exception as e:
         print(e)
         if ("Duplicate entry" in str(e)):
-            return("标题重复")
+            return({"state":"标题重复"})
         return("未知错误")
             
 def EditArtical(af):#修改文章
@@ -123,6 +125,8 @@ def EditArtical(af):#修改文章
     af["rawtitle"] = CleanTitle(af["rawtitle"])
     af["title"] = CleanTitle(af["title"])
     af["essay"] = CleanArtical(af["essay"])
+    if af["type"] not in ARTICALTYPELIST:
+        return (ARTICLETYPEERR)
     if "password" in af:
         if af["password"]==str(RESETARTCALPASSWORD):#如果取消密码
             print("resetpassword")
@@ -137,10 +141,10 @@ def EditArtical(af):#修改文章
     if CheckUserName(af["name"]) and CheckTitle(af["title"]):
         try:
             if sqllib.EditArtical(af) is True:
-                return "success"
+                return ({"state":"success"})
         except Exception as e:
             if ("Duplicate entry" in str(e)):
-                return("标题重复")
+                return({"state":"标题重复"})
             return("未知错误")
 
 def DeleteArticalByNameTitle (af):
