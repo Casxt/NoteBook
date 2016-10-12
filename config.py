@@ -29,7 +29,9 @@ LOGINFAILEDTIMES=3
 WAITETIME=0.1
 #失败惩罚倍数（WAITENUM的n-3次方）
 WAITENUM=2
-
+#搜索词长度
+MINSEARCHLENGTH=1
+MAXSEARCHLENGTH=40
 #######################
 #
 #邮件设置

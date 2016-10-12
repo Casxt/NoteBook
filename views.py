@@ -135,8 +135,8 @@ def searchartical(request):
             #print(json.dumps({'state':'success','articallist':articallist}))
             return HttpResponse(json.dumps({'state':'success','keyword':dict["keyword"],'articallist':articallist})) 
         else:
-            print(articallist)
-            return HttpResponse(json.dumps({'state':articallist})) 
+            print(json.dumps(articallist))
+            return HttpResponse(json.dumps(articallist)) 
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie

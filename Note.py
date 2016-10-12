@@ -24,8 +24,10 @@ def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
         uf["id"] = uf["title"]
     #uf["uid"] = uf.get("uid",PUBLICUSER)
     uf["name"] = uf.get("name",PUBLICUSER)
-    if uf["name"] != PUBLICUSER and uf["iflogin"]==False:
-        return ARTICALNEEDRIGHT
+    uf["mode"] = uf.get("mode",None)
+    print ("uf[name]",uf["mode"])
+    if uf["name"] != PUBLICUSER and uf["iflogin"]==False and uf["mode"]=="edit":
+        return (ARTICALNEEDRIGHT)
     try:
         artical = sqllib.GetArtical(uf)
         #print("GetArtical",artical)
@@ -206,7 +208,7 @@ def SearchArticalList(af):
             print(e)
             return("SearchArticalList未知错误",False)
     else:
-        return("Failed",False)
+        return({"state":"Failed"},False)
         
 def CreateUser(uf):#生成用户，生成uid，生成盐
     import uuid
@@ -320,8 +322,9 @@ def CheckTitle(Title):
         return True
         
 def CheckKeyWord(KeyWord):
-    s = r'[`=]'
-    if re.match(s, KeyWord) or len(KeyWord.replace(" ",""))<3:
+    s = r'[`=\/]'
+    print(KeyWord.replace(" ",""))
+    if re.match(s, KeyWord) or len(KeyWord.replace(" ",""))<MINSEARCHLENGTH or len(KeyWord.replace(" ",""))>MAXSEARCHLENGTH:
         return False
     else:
         return True  

@@ -7,11 +7,14 @@
 //常量
 //
 ////////////////
+//文章标题长度
 var MINTITLELENGTH = 2
 var MAXTITLELENGTH = 200
+//文章正文长度
 var MINESSAYLENGTH = 10
 var MAXESSAYLENGTH = 50000
-var MINSEARCHLENGTH = 3
+//搜索词长度
+var MINSEARCHLENGTH = 1
 var MAXSEARCHLENGTH = 40
 //文章种类
 var ARTIVLEKINDS = {"html/text":"Html/Text",
@@ -126,6 +129,7 @@ function checkeurl() {
     var matchpathedit = /^\/e(dit)?\/([\S]{0,})$/g; //匹配edit/...
     var matchpathregister = /^\/register\/([\S]{0,})$/g; //匹配register/...
     var matchpathlist = /^\/l(ist)?\/([\S]{0,})$/g; //匹配list/...
+    var matchpathsearch = /^\/s(earch)?\/([\S\s]{0,})$/g; //匹配list/...
     if (matchpathlogin.test(path)) {
         //
     } else if (matchpathlogout.test(path)) {
@@ -136,7 +140,10 @@ function checkeurl() {
         //
     } else if (matchpathlist.test(path)) {
         getarticallist();
-    } else if (matchuserpath.test(path)) {
+    } else if (matchpathsearch.test(path)) {
+        //搜索
+        SearchArtical();
+    }  else if (matchuserpath.test(path)) {
         autogetartical();
     } else if (matchpath.test(path)) {
         autogetartical();
@@ -307,52 +314,7 @@ function getarticallist() { //获取文章列表
         }
     });
 }
-//搜索事件
-function SearchArtical() {
-    var html = document.getElementById("listshower");
-    var keyword = document.getElementById("header-search").value;
-    document.getElementById("search-warning").innerHTML = "Loading...";
-    $.ajax({
-        beforeSend: function(request) {
-            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-        },
-        type: 'POST',
-        url: '/search/',
-        data: {
-            'keyword': keyword,
-            'name': getCookie("name")
-        },
-        dataType: 'json',
-        success: function(data) {
-            if (data.state == "success") {
-                list = data.articallist
-                var title = "";
-                if (list.length < 1) {
-                    document.getElementById("search-warning").innerHTML = "没有找到";
-                } else {
-                    history.pushState({},
-                    "note", "/search/");
-                    html.innerHTML = "";
-                    document.getElementById("header-search").value = "";
-                    $("#title-editer").hide();
-                    $("#essay-editer").hide();
-                    $("#shower").hide();
-                    var cookiename = getCookie("name");
-                    for (i in list) {
-                        title = list[i].title;
-                        name = list[i].name?(list[i].name):"";
-                        var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
-                        html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
-                                                                <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
-                                                                <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
-                                                                <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
-                    }
-                }
-            }
-        }
-    });
-}
+
 //获取编辑文章信息 改正则时注意a的位置编号
 function EditArtical() {
     var path = window.location.pathname;
@@ -440,17 +402,97 @@ function EditArtical() {
             }
         });
 }
-
+//搜索事件
+function SearchArtical() {
+    var path = window.location.pathname;
+    var matchpath2 = /(^\/s(earch)?\/(([\S\s]{0,}?)\/?))$/g; //匹配文章
+    var a = matchpath2.exec(path);
+    var KeyWord = decodeURIComponent(a[4]);
+    if (CheckSearchInput(KeyWord)){
+        //
+    }else{
+        return false;
+    }
+    var html = document.getElementById("listshower");
+    //var keyword = document.getElementById("header-search").value;
+    var keyword = KeyWord;
+    document.getElementById("search-warning").innerHTML = "Loading...";
+    var res = "aa";
+    $.ajax({
+        beforeSend: function(request) {
+            request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+        },
+        type: 'POST',
+        url: '/search/',
+        data: {
+            'keyword': keyword,
+            'name': getCookie("name")
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.state == "success") {
+                list = data.articallist
+                var title = "";
+                if (list.length < 1) {
+                    document.getElementById("search-warning").innerHTML = "没有找到";
+                    res = false;
+                    history.back();
+                } else {
+                    $("#title-editer").hide();
+                    $("#essay-editer").hide();
+                    $("#shower").hide();
+                    $("#list-page").hide();
+                    //history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
+                    document.getElementById("search-warning").innerHTML = "";
+                    html.innerHTML = "";
+                    var cookiename = getCookie("name");
+                    for (i in list) {
+                        title = list[i].title;
+                        name = list[i].name?(list[i].name):"";
+                        var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
+                        html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
+                                                                <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
+                                                                <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
+                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
+                                                                <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
+                    }
+                    res = true;
+                }
+            }else{
+                document.getElementById("search-warning").innerHTML = data.state;
+                res = false;
+                history.back();
+            }
+        }
+    });
+    return res;
+}
 //监控回车搜素
 $('#header-search').keydown(function(e) {
-    if (e.keyCode == 13 && CheckSearchInput()) {
-        SearchArtical()
+    if (e.keyCode == 13 && CheckSearchInput($('#header-search').val())) {
+        var keyword = document.getElementById("header-search").value;
+        history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
+        //window.location.href = ("/search/"+encodeURIComponent(keyword)+"/");
+        var res = SearchArtical();
+        if (res){
+            //history.back();
+        }else{
+            //history.back();
+            }
     }
 });
 //按钮监控
 $('#header-search-buttom').click(function() {
-    if (CheckSearchInput()) {
-        SearchArtical();
+    if (CheckSearchInput($('#header-search').val())) {
+        var keyword = document.getElementById("header-search").value;
+        history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
+        //window.location.href = ("/search/"+encodeURIComponent(keyword)+"/");
+        var res = SearchArtical();
+        if (res){
+            //history.back();
+        }else{
+            //history.back();
+            }
     }
 });
 //检查搜索关键词
@@ -460,17 +502,17 @@ function() {
 });
 $('#header-search').on("change",
 function() {
-    CheckSearchInput();
+    CheckSearchInput($('#header-search').val());
 });
 //检查搜索框
-function CheckSearchInput() {
-    var word = $('#header-search').val();
+function CheckSearchInput(word) {
+    //var word = $('#header-search').val();
     var len = word.replace(/\s/g, "").length;
     if (len < MINSEARCHLENGTH) {
-        document.getElementById("search-warning").innerHTML = "至少3个字";
+        document.getElementById("search-warning").innerHTML = "至少"+MINSEARCHLENGTH+"个字";
         return false;
     } else if (word.length >= MAXSEARCHLENGTH) {
-        document.getElementById("search-warning").innerHTML = "至多40个字";
+        document.getElementById("search-warning").innerHTML = "至多"+MAXSEARCHLENGTH+"个字";
         return false;
     } else {
         document.getElementById("search-warning").innerHTML = "";
@@ -853,7 +895,7 @@ function() //提交注册
                 if (data.state == "success") {
                     document.getElementById("register-Signup").className = "btn btn-success";
                     document.getElementById("register-Signup").innerHTML = "success";
-                    window.location.href = "/"
+                    window.location.href = "/";
                 } else {
                     document.getElementById("register-Signup").className = "btn btn-danger";
                     document.getElementById("register-Signup").innerHTML = data.state;
