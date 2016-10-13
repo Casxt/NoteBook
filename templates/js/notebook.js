@@ -16,6 +16,11 @@ var MAXESSAYLENGTH = 50000
 //搜索词长度
 var MINSEARCHLENGTH = 1
 var MAXSEARCHLENGTH = 40
+//搜索警告动画时长
+var SEARCHWARNINGFADETIME = 200
+//搜索加载动画时长
+var ARTICLELISTFADEINDALY = 20
+var ARTICLELISTFADEINTIME = 200
 //文章种类
 var ARTIVLEKINDS = {"html/text":"Html/Text",
                     "html":"Html",
@@ -139,7 +144,7 @@ function checkeurl() {
     } else if (matchpathregister.test(path)) {
         //
     } else if (matchpathlist.test(path)) {
-        getarticallist();
+        GetArticleList();
     } else if (matchpathsearch.test(path)) {
         //搜索
         SearchArtical();
@@ -244,7 +249,7 @@ function autogetartical() {
         }
     });
 }
-function getarticallist() { //获取文章列表
+function GetArticleList() { //获取文章列表
     var path = window.location.pathname;
     var matchpath2 = /(^\/l(ist)?\/((\D[\S\s]+?)\/)?)((\d+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
@@ -284,26 +289,37 @@ function getarticallist() { //获取文章列表
                 list = data.articallist;
                 var count = Math.ceil(data.count/20);
                 var title = "";
+                var num = 0;
                 for (i in list) {
                     title = list[i].title;
                     var ifpassword = list[i].ifpassword;
                     //var href =  encodeURI(name + title);encodeURI不会对/编码
                     var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
-                    html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
+                    html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;overflow: visible;" class="list-group-item">\
                                                             <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
                                                             '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
                                                             <strong>' + title + '</strong>\
                                                             <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
                                                             <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
                                                             <span class="glyphicon glyphicon-edit"></span></button></a>';
+                    num++;
                 }
                 for (i=1;i<=count;i++) {
                     if (i==page){
-                        pagehtml.innerHTML = pagehtml.innerHTML + '<li class="active"><a>'+i+'</a></li>';
+                        var id = ("pagenum"+i);
+                        pagehtml.innerHTML = pagehtml.innerHTML + '<li id="'+id+'" style="display:none;overflow: visible;" class="active"><a>'+i+'</a></li>';
+                        list.push({"id":id});
+                        num++;
                     }else{
-                        pagehtml.innerHTML = pagehtml.innerHTML + '<li><a href="'+pagepath+i+'">'+i+'</a></li>';
+                        var id = ("pagenum"+i);
+                        pagehtml.innerHTML = pagehtml.innerHTML + '<li id="'+id+'" style="display:none;overflow: visible;"><a href="'+pagepath+i+'">'+i+'</a></li>';
+                        list.push({"id":id});
+                        num++;
                     }
                 }
+                ArticleListFadeIn(list,0,num);
+
+                //setTimeout.(jstext,num*ARTICLELISTFADEINDALY);
                 if (a[4] != getCookie("name")) {
                     $(".artical-delete").hide();
                 }
@@ -331,21 +347,6 @@ function EditArtical() {
                 "mode": "edit",
             }
             isname = 1
-/*          if(cookie_name==a[3]){//有调用名称时检查编辑的文章是否是该用户的
-                postdata = {
-                    "name": a[3],
-                    "title": a[5],
-                    "mode": "edit",
-                }
-                isname = 1
-            }else{
-                $("#title-editer").hide();
-                $("#essay-editer").hide();
-                title = "No Enough Rights";
-                essay = "You Can't Edit Other User's Artical";
-                document.getElementById("showtitle").innerHTML = title;
-                document.getElementById("showartical").innerHTML = FormatEssay(essay,"html/text");
-            } */
         } else if (a[3] != "undefined" && a[5] == "undefined") {
             postdata = {
                 "title": a[3],
@@ -416,6 +417,7 @@ function SearchArtical() {
     var html = document.getElementById("listshower");
     //var keyword = document.getElementById("header-search").value;
     var keyword = KeyWord;
+    $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
     document.getElementById("search-warning").innerHTML = "Loading...";
     var res = "aa";
     $.ajax({
@@ -432,8 +434,9 @@ function SearchArtical() {
         success: function(data) {
             if (data.state == "success") {
                 list = data.articallist
-                var title = "";
+                //var title = "";
                 if (list.length < 1) {
+                    $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
                     document.getElementById("search-warning").innerHTML = "没有找到";
                     res = false;
                     history.back();
@@ -443,20 +446,24 @@ function SearchArtical() {
                     $("#shower").hide();
                     $("#list-page").hide();
                     //history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
-                    document.getElementById("search-warning").innerHTML = "";
+                    $('#search-warning').fadeOut(SEARCHWARNINGFADETIME);
+                    //document.getElementById("search-warning").innerHTML = "";
                     html.innerHTML = "";
                     var cookiename = getCookie("name");
+                    var num = 0;
                     for (i in list) {
-                        title = list[i].title;
+                        var title = list[i].title;
                         name = list[i].name?(list[i].name):"";
                         var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
-                        html.innerHTML = html.innerHTML + '<a id="' + title + '" href="/' + href + '/" type="button" class="list-group-item">\
+                        html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;overflow: visible;" class="list-group-item" >\
                                                                 <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
                                                                 <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
                                                                 <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
                                                                 <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
-                    }
-                    res = true;
+                        num++;
+                   }
+                   ArticleListFadeIn(list,0,num);
+                   res = true;
                 }
             }else{
                 document.getElementById("search-warning").innerHTML = data.state;
@@ -466,6 +473,16 @@ function SearchArtical() {
         }
     });
     return res;
+}
+//列表加载动画
+function ArticleListFadeIn(list,i,num){
+    if (i<num){
+        var jstext = "$('#"+list[i].id+"').fadeIn("+ARTICLELISTFADEINTIME+")"
+        window.setTimeout(jstext,i*ARTICLELISTFADEINDALY);
+        i = i+1;
+        ArticleListFadeIn(list,i,num)
+    }
+    return 0;
 }
 //监控回车搜素
 $('#header-search').keydown(function(e) {
@@ -498,7 +515,8 @@ $('#header-search-buttom').click(function() {
 //检查搜索关键词
 $('#header-search').on("focus",
 function() {
-    document.getElementById("search-warning").innerHTML = "";
+    $('#search-warning').fadeOut(SEARCHWARNINGFADETIME);
+    //document.getElementById("search-warning").innerHTML = "";
 });
 $('#header-search').on("change",
 function() {
@@ -509,13 +527,16 @@ function CheckSearchInput(word) {
     //var word = $('#header-search').val();
     var len = word.replace(/\s/g, "").length;
     if (len < MINSEARCHLENGTH) {
+        $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
         document.getElementById("search-warning").innerHTML = "至少"+MINSEARCHLENGTH+"个字";
         return false;
     } else if (word.length >= MAXSEARCHLENGTH) {
+        $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
         document.getElementById("search-warning").innerHTML = "至多"+MAXSEARCHLENGTH+"个字";
         return false;
     } else {
-        document.getElementById("search-warning").innerHTML = "";
+        $('#search-warning').fadeOut(SEARCHWARNINGFADETIME);
+        //document.getElementById("search-warning").innerHTML = "";
         return true;
     }
 }
@@ -756,27 +777,28 @@ $("#login-bottom").click(function() { //提交登录
 $(document).on('click', '#text-info-show',
 function() //详细信息
 {
-    $(this).attr('id', 'text-info-hide');
-    $("#attributer").show();
+    //$(this).attr('id', 'text-info-hide');
+    //$("#attributer").show();.slideDown("slow")
+    $("#attributer").slideToggle("slow");//slideToggle实现切换
 });
-$(document).on('click', '#text-info-hide',
+/* $(document).on('click', '#text-info-hide',
 function() //详细信息
 {
     $(this).attr('id', 'text-info-show');
     $("#attributer").hide();
-});
+}); */
 $(document).on('click', '#text-shower-show',
 function() //展示框
 {
-    $(this).attr('id', 'text-shower-hide');
-    $("#shower").show();
+    //$(this).attr('id', 'text-shower-hide');
+    $("#shower").slideToggle("slow");
 });
-$(document).on('click', '#text-shower-hide',
+/* $(document).on('click', '#text-shower-hide',
 function() //展示框
 {
     $(this).attr('id', 'text-shower-show');
     $("#shower").hide();
-});
+}); */
 $(document).on('click', '#text-password-on',
 function() //启用密码
 {
