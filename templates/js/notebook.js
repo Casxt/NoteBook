@@ -20,7 +20,9 @@ var MAXSEARCHLENGTH = 40
 var SEARCHWARNINGFADETIME = 200
 //搜索加载动画时长
 var ARTICLELISTFADEINDALY = 20
-var ARTICLELISTFADEINTIME = 200
+var ARTICLELISTFADEINTIME = 20
+//id标号颜色
+var ARTICLEIDSTYLE = "label-primary"
 //文章种类
 var ARTIVLEKINDS = {"html/text":"Html/Text",
                     "html":"Html",
@@ -89,8 +91,10 @@ function checkloginstate() {
                 $("#open-login").show();
                 setDefaultCookie("name", "", 0);
                 setDefaultCookie("login", 0);
-                $("#header-search-buttom").hide();
-                $("#header-search").hide();
+                //search
+                $("#search").hide();
+                //$("#header-search-buttom").hide();
+                //$("#header-search").hide();
             }
 
         }
@@ -101,8 +105,9 @@ function afterlogin(data) {
     setDefaultCookie("name", data.name);
     setDefaultCookie("login", 1);
     $("#open-login").hide();
-    $("#header-search-buttom").show();
-    $("#header-search").show();
+    $("#search").show();
+    //$("#header-search-buttom").show();
+    //$("#header-search").show();
     document.getElementById("menu-user").innerHTML = '<a id="navbar-userinfo" href="#" class="dropdown-toggle" data-toggle="dropdown" \
                                                     role="button" aria-haspopup="true" aria-expanded="false">\
                                                     ' + data.name + '<span class="caret"></span></a>\
@@ -295,8 +300,8 @@ function GetArticleList() { //获取文章列表
                     var ifpassword = list[i].ifpassword;
                     //var href =  encodeURI(name + title);encodeURI不会对/编码
                     var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
-                    html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;overflow: visible;" class="list-group-item">\
-                                                            <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
+                    html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;" class="list-group-item">\
+                                                            <span class="label '+ARTICLEIDSTYLE+'">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
                                                             '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
                                                             <strong>' + title + '</strong>\
                                                             <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
@@ -441,6 +446,7 @@ function SearchArtical() {
                     res = false;
                     history.back();
                 } else {
+                    SetPageStyleWhite();
                     $("#title-editer").hide();
                     $("#essay-editer").hide();
                     $("#shower").hide();
@@ -456,7 +462,7 @@ function SearchArtical() {
                         name = list[i].name?(list[i].name):"";
                         var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
                         html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;overflow: visible;" class="list-group-item" >\
-                                                                <span class="label label-default">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>' + title + (list[i].name==cookiename?('\
+                                                                <span class="label '+ARTICLEIDSTYLE+'">' + list[i].id + '</span><span style="padding-right: 1em;" ></span><strong>' + title + '</strong>' + (list[i].name==cookiename?('\
                                                                 <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
                                                                 <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
                                                                 <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
@@ -1141,7 +1147,8 @@ function() {
 //
 /////////////////////
 function FormatEssay(essay,type) {
-    document.getElementById('showartical').setAttribute("style", ""); 
+    //document.getElementById('showartical').setAttribute("style", ""); 
+    SetPageStyleWhite();
     if (type=='html/text'){
         essay = FormatHtmlText(essay);
     }else if(type=='html'){
@@ -1213,7 +1220,34 @@ function FormatCode(essay) {
     essay = py.value;
     essay = hljs.fixMarkup(essay);
     essay = essay.replace(/\  /g,"&nbsp;&nbsp;"); //以2空格为单位替换
-    document.getElementById('showartical').setAttribute("style", "background:#fdf6e3;"); 
+    //更改全局样式，记得改回去
+    SetPageStyleBlack();
     return essay;
-    //background:#232323;fdf6e3
 }
+function SetPageStyleWhite(){
+    $("#shower-panel").attr("class", "panel panel-default");
+    $("#navbar").attr("class", "navbar navbar-default navbar-fixed-top");
+    document.body.style.backgroundColor="#FFFFFF";
+    document.body.style.color = "#000000";
+    document.getElementById('showartical').setAttribute("style", "background:#FFFFFF;"); 
+    document.getElementById('header-search').setAttribute("style", "");
+    document.getElementById('header-search-buttom').setAttribute("style", "");
+    document.getElementById('shower-panel').setAttribute("style", "");
+    document.getElementById('shower-panel-heading').setAttribute("style", "");
+}
+function SetPageStyleBlack(){
+    //navbar-inverse panel-title #75715e
+    //$("#shower-panel").attr("class", "panel panel-primary");
+    $("#navbar").attr("class", "navbar navbar-inverse navbar-fixed-top ");
+    document.getElementById('showartical').setAttribute("style", ""); 
+    document.getElementById('header-search').setAttribute("style", "background-color:#696969;border:#292929;color:#ffffff;");
+    document.getElementById('header-search-buttom').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
+    document.getElementById('shower-panel').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;");
+    document.getElementById('shower-panel-heading').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
+    //设置字体颜色 
+    document.body.style.backgroundColor="#292929";
+    document.body.style.color = "#f8f8f2";
+    //文章背景色 #f8f8f2 color
+    document.getElementById('showartical').setAttribute("style", "background:#23241f;"); 
+}
+//document.body.style.backgroundImage="url(http://www.iteye.com/upload/logo/user/37073/648c9ed4-f54b-3f4a-ac54-905f5a483307.gif?1236833802)"; //改变背景图片  
