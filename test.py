@@ -18,6 +18,15 @@ def TestCheckUser():
 def TestCheckUserName():
     return(Note.CheckUserName("admin"))
 
+def TestSpiderResponser():
+    url = "/maple/非递归动态规划/"
+    url = "/list/maple/"
+    url = "/list/"
+    url = "/非递归动态规划/"
+    s = r'^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$'
+    a = re.match(s, url).groups()
+    print (a[1],a[3])    
+TestSpiderResponser()
 def TestNoteCreateUser():
     uf={
         'name':'testuser',

@@ -19,9 +19,10 @@ ARTICALTYPELIST=['html/text','html','text','json','image','markdown',"code"]
 #默认文章类型
 DEFAULTARTICALTYPE=ARTICALTYPELIST[0]
 #每页显示条目
-EACHPAGENUM=20
+EACHPAGENUM=18
 #取消密码关键字
 RESETARTCALPASSWORD=0
+#我也忘下面这个设置是做什么的了
 DEFAULTARTICALPASSWORD=0
 #连续失败次数
 LOGINFAILEDTIMES=3

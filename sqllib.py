@@ -261,7 +261,7 @@ def GetArticalList (af):#获取文章列表
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
-    cursor.execute(sql,(af["uid"],(af["page"]-1)*af["eachpage"],af["page"]*af["eachpage"]))
+    cursor.execute(sql,(af["uid"],(af["page"]-1)*af["eachpage"],af["eachpage"]))
     values = cursor.fetchall()
     cursor.close()
     conn.commit()
@@ -271,6 +271,7 @@ def GetArticalList (af):#获取文章列表
         d = dict(zip(Articalcolumn,value))
         d["ifpassword"] = False if (d["saltpassword"]==None) else True
         result.append(d)
+    print(len(values))
     return result
 
 def CountArticalList (af):#获取用户文章数目

@@ -177,7 +177,8 @@ function autoloadartical() {
     }
 }
 //获取文章信息
-$('#Modal-artical-passwords-submit').click(function() {
+$(document).on('click', '#Modal-artical-passwords-submit',
+function() {
     $(this).html("Loading...");
     autogetartical(1);
 });
@@ -243,12 +244,16 @@ function autogetartical() {
                 $("#text-type").val(data.type);
             } else if (data.state == "Need Password") {
                 $("#Modal-artical-password").modal("show");
-                document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
-                document.getElementById("showartical").innerHTML = "";
+                //document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
+                //document.getElementById("showartical").innerHTML = "";
+                document.getElementById("showtitle").innerHTML = data.title;
+                document.getElementById("showartical").innerHTML = data.essay;
             } else {
                 $("#Modal-artical-password").modal("hide");
-                document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
-                document.getElementById("showartical").innerHTML = "";
+                //document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
+                //document.getElementById("showartical").innerHTML = "";
+                document.getElementById("showtitle").innerHTML = data.title;
+                document.getElementById("showartical").innerHTML = data.essay;
             }
             return (data);
         }
@@ -372,8 +377,10 @@ function EditArtical() {
                     var essay = data.essay;
                     edittitle = unescape(getCookie("title"))
                     editessay = unescape(getCookie("essay"))
-                    if (edittitle == "null" && editessay == "null"){
+                    if (edittitle == "null" ){
                         edittitle = title;
+                    }
+                    if (editessay == "null"){
                         editessay = essay;
                     }
                     $("#text-title").val(edittitle);
@@ -491,11 +498,12 @@ function ArticleListFadeIn(list,i,num){
     return 0;
 }
 //监控回车搜素
-$('#header-search').keydown(function(e) {
+$(document).on('keydown', '#header-search',
+//$('#header-search').keydown(
+function(e) {
     if (e.keyCode == 13 && CheckSearchInput($('#header-search').val())) {
         var keyword = document.getElementById("header-search").value;
         history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
-        //window.location.href = ("/search/"+encodeURIComponent(keyword)+"/");
         var res = SearchArtical();
         if (res){
             //history.back();
@@ -505,7 +513,8 @@ $('#header-search').keydown(function(e) {
     }
 });
 //按钮监控
-$('#header-search-buttom').click(function() {
+$(document).on('click', '#header-search-buttom',
+function() {
     if (CheckSearchInput($('#header-search').val())) {
         var keyword = document.getElementById("header-search").value;
         history.pushState({},"note", ("/search/"+encodeURIComponent(keyword)+"/"));
@@ -750,7 +759,8 @@ $(document).on('click', "#open-login",
 function() {
     $("#Modal-Login").modal("show");
 });
-$("#login-bottom").click(function() { //提交登录
+$(document).on('click', "#login-bottom",
+function() { //提交登录
     document.getElementById("login-bottom").className = "btn btn-warning";
     document.getElementById("login-bottom").innerHTML = "Checking...";
     $.ajax({
@@ -783,28 +793,13 @@ $("#login-bottom").click(function() { //提交登录
 $(document).on('click', '#text-info-show',
 function() //详细信息
 {
-    //$(this).attr('id', 'text-info-hide');
-    //$("#attributer").show();.slideDown("slow")
     $("#attributer").slideToggle("slow");//slideToggle实现切换
 });
-/* $(document).on('click', '#text-info-hide',
-function() //详细信息
-{
-    $(this).attr('id', 'text-info-show');
-    $("#attributer").hide();
-}); */
 $(document).on('click', '#text-shower-show',
 function() //展示框
 {
-    //$(this).attr('id', 'text-shower-hide');
     $("#shower").slideToggle("slow");
 });
-/* $(document).on('click', '#text-shower-hide',
-function() //展示框
-{
-    $(this).attr('id', 'text-shower-show');
-    $("#shower").hide();
-}); */
 $(document).on('click', '#text-password-on',
 function() //启用密码
 {

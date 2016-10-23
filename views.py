@@ -6,7 +6,7 @@ import json
 import note.Note as Note
 
 # Create your views here.
-
+    
 @ensure_csrf_cookie
 def index(request):
     return render(request, 'note_index.html')
@@ -78,6 +78,10 @@ def getartical(request,keyword=None):
         print("getartical",dict)
         artical = Note.GetArtical(dict)#getartical by
         return HttpResponse(json.dumps(artical))
+    #判断spider
+    elif "spider" in request.META.get('HTTP_USER_AGENT', "").lower():
+        res = Note.SpiderResponser(request.path)
+        return HttpResponse(res)
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie

@@ -11,12 +11,13 @@ try:
     import note.sqllib as sqllib
     import note.mail as mail
     from note.config import *
+    from note.spider import *
 except Exception as e:
     print (e)
     import sqllib
     import mail
     from config import *
-
+    from spider import *
 def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
     uf["title"] = CleanTitle(uf["title"])#id title共用关键字
     uf["id"] = 0
@@ -40,11 +41,11 @@ def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
         if uf.get("mode",None)=="edit" and uf["uid"]==artical["uid"]:#如果有传入密码
             artical["state"]="success"
         elif uf.get("password",None) is None:#如果没有传入密码
-            return {"state":"Need Password"}
+            return {"state":"Need Password","title":"Permission Denied","essay":"Need Password"}
         elif CheckArticalPassword({"saltpassword":artical["saltpassword"],"salt":artical["salt"],"password":uf.get("password","None")}):#如果有传入密码
             artical["state"]="success"
         else:#传入密码错误
-            return {"state":"Failed"}
+            return {"state":"Failed","title":"Get Title Error","essay":"Get Essay Error"}
     else:
         artical["state"]="success"
     del artical["saltpassword"]
@@ -189,7 +190,46 @@ def GetArticalList(af):
         return(result,count,True)
     else:
         return("Name Err",0,False)
+
+def SpiderResponser(url):
+    s = r'^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$'
+    try:
+        a = re.match(s, url).groups()#1,3
+    except:
+        pass
+    #print (a[0],a[1],a[2],a[3])
+    if (a[1] != "list"):
+        return GetSpiderArticle(a[1],a[3])
+    elif (a[1] == "list"):
+        pass
         
+def GetSpiderArticle(user,title):
+    if title is None:
+        title = user
+        user = PUBLICUSER
+    af = {
+        "mode":"GetArticle",
+        "title":title,
+        "name":user,
+        "iflogin":False
+    }
+    res = GetArtical(af)
+    #res["essay"] = res["essay"].replace("\n","<br>")
+    #res["essay"] = re.sub(r'\s','&nbsp;', res["essay"])
+    return APIDERARTICLE.format(res["title"],res["essay"])
+    
+#保密性需求，是否要开放列表？
+def GetSpiderArticleList(list,user):
+    if user is None:
+        user = PUBLICUSER
+    af = {
+        "mode":"GetArticleList",
+        "name":user,
+        "iflogin":False
+    }
+    res = GetArticalList(af)
+    return 0
+    
 def SearchArticalList(af):
     if "name" not in af:#必须有name字段否则视为未登录，登录验证由session处理
         af["name"]=PUBLICUSER
@@ -309,7 +349,7 @@ def CheckUserMail(Mail):#检查邮箱是否合法
         return False
 
 def CleanTitle(Title):
-    Title = re.sub(r'/s',' ', Title)
+    Title = re.sub(r'\s',' ', Title)
     Title.replace("<","").replace(">","")
     return Title
     
