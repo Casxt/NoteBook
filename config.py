@@ -42,7 +42,7 @@ MAXSEARCHLENGTH=40
 #邮件发送地址
 MAIL_FROM_ADDR = "maple@forer.cn"
 #smtp服务器密码
-MAIL_PASSWORD = '951753qwe'
+MAIL_PASSWORD = 'pass'
 #收件地址
 MAIL_TO_ADDR = '774714620@qq.com'
 #smtp服务器
