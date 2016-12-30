@@ -1,8 +1,15 @@
-SQLCONFIG={'host':'',#默认127.0.0.1
-        'user':'',
-        'password':'',
-        'port':3306 ,#默认即为3306
-        'database':'',
+# SQLCONFIG={'host':'',#默认127.0.0.1
+        # 'user':'',
+        # 'password':'',
+        # 'port':3306 ,#默认即为3306
+        # 'database':'',
+        # 'charset':'utf8'#默认即为utf8
+        # }
+SQLCONFIG={'host':'5739d1cc363d7.sh.cdb.myqcloud.com',#默认127.0.0.1
+        'user':'cdb_outerroot',
+        'password':'753951Qwe',
+        'port':4602 ,#默认即为3306
+        'database':'MapleDB',
         'charset':'utf8'#默认即为utf8
         }
 TABLE= {'user':'Note_user',
