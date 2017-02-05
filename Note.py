@@ -7,47 +7,54 @@ import hashlib
 import re
 import json
 import time
+import traceback
+#traceback.format_exc()
 try:
     import note.sqllib as sqllib
     import note.mail as mail
     from note.config import *
     from note.spider import *
 except Exception as e:
-    print (e)
+    print (traceback.format_exc())
     import sqllib
     import mail
     from config import *
     from spider import *
-def GetArtical(uf):#快速获取文章内容，用于主页展示和文章编辑
-    uf["title"] = CleanTitle(uf["title"])#id title共用关键字
-    uf["id"] = 0
-    if uf["title"].isdigit():
-        uf["id"] = uf["title"]
-    #uf["uid"] = uf.get("uid",PUBLICUSER)
-    uf["name"] = uf.get("name",PUBLICUSER)
-    uf["mode"] = uf.get("mode",None)
-    print ("uf[name]",uf["mode"])
-    if uf["name"] != PUBLICUSER and uf["iflogin"]==False and uf["mode"]=="edit":
-        return (ARTICALNEEDRIGHT)
+    
+def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
+    ActionInfo["title"] = CleanTitle(ActionInfo["title"])#id title共用关键字
+    ActionInfo["id"] = 0
+    if ActionInfo["title"].isdigit():
+        ActionInfo["id"] = ActionInfo["title"]
+    ActionInfo["mode"] = ActionInfo.get("mode",None)
+    print ("ActionInfo[name]",ActionInfo)
+
+    if "name" not in ActionInfo:
+        ActionInfo["name"]=PUBLICUSER
+        ActionInfo["uid"]=PUBLICUSER
+    if "author" not in ActionInfo:
+        ActionInfo["author"]=PUBLICUSER
+
     try:
-        artical = sqllib.GetArtical(uf)
-        #print("GetArtical",artical)
+        artical = sqllib.GetArtical(ActionInfo)
     except Exception as e:    
-        print("GetArtical",e)
+        print(traceback.format_exc())
         return ("Note.GetArtical UnkonwErr")
     if artical is None:
         return {"title":None,"essay":None,"state":"Failed"}
+
     if artical["saltpassword"] is not None:#如果有密码
-        if uf.get("mode",None)=="edit" and uf["uid"]==artical["uid"]:#如果有传入密码
+        if ActionInfo.get("mode",None)=="edit":#如果有传入密码
             artical["state"]="success"
-        elif uf.get("password",None) is None:#如果没有传入密码
+        elif ActionInfo.get("password",None) is None:#如果没有传入密码
             return {"state":"Need Password","title":"Permission Denied","essay":"Need Password"}
-        elif CheckArticalPassword({"saltpassword":artical["saltpassword"],"salt":artical["salt"],"password":uf.get("password","None")}):#如果有传入密码
+        elif CheckArticalPassword({"saltpassword":artical["saltpassword"],"salt":artical["salt"],"password":ActionInfo.get("password","None")}):#如果有传入密码
             artical["state"]="success"
         else:#传入密码错误
             return {"state":"Failed","title":"Get Title Error","essay":"Get Essay Error"}
     else:
         artical["state"]="success"
+
     del artical["saltpassword"]
     del artical["salt"]
     del artical["uid"]
@@ -83,6 +90,7 @@ def CheckUser(uf):#检查用户能否登录
                 islogin = True
                 info["uid"] = userinfo["uid"]
                 info["name"] = userinfo["name"]
+                info["permissions"] = userinfo["permissions"]
             else:
                 sqllib.LoginFailed ({'name':name})
                 state = "Failed"
@@ -95,88 +103,114 @@ def CheckUser(uf):#检查用户能否登录
     info["state"]=state
     return (islogin,info,stateinfo)
 
-def CheckArticalPassword(af):#发现文章有密码之后的操作
+def CheckArticalPassword(ActionInfo):#发现文章有密码之后的操作
     shapassword = hashlib.sha256()
-    shapassword.update((str(af["password"])+af['salt']).encode('utf-8'))
-    if shapassword.hexdigest()==af['saltpassword']:
+    shapassword.update((str(ActionInfo["password"])+ActionInfo['salt']).encode('utf-8'))
+    if shapassword.hexdigest()==ActionInfo['saltpassword']:
         return True
     else:
         return False
-def SubmitArtical(af):
-#af=('title','name','essay','right','blgroup','password','prikey','pubkey')
-    af["title"] = CleanTitle(af["title"])
-    af["essay"] = CleanArtical(af["essay"])
-    af["uid"] = af.get("uid",PUBLICUSER)
-    if af["type"] not in ARTICALTYPELIST:
-        return (ARTICLETYPEERR)
-    if "password" in af:
-        af = CreateSaltAndPassword(af)
-    try:
-        if CheckTitle(af["title"]):
-            sqllib.CreatArtical (af)
-            return({"state":"success"})
-        else:
-            return({"state":"Title Err"})
-    except Exception as e:
-        print(e)
-        if ("Duplicate entry" in str(e)):
-            return({"state":"标题重复"})
-        return("未知错误")
-            
-def EditArtical(af):#修改文章
-#af=('title','name','essay','right','blgroup','password','prikey','pubkey')
-    af["rawtitle"] = CleanTitle(af["rawtitle"])
-    af["title"] = CleanTitle(af["title"])
-    af["essay"] = CleanArtical(af["essay"])
-    if af["type"] not in ARTICALTYPELIST:
-        return (ARTICLETYPEERR)
-    if "password" in af:
-        if af["password"]==str(RESETARTCALPASSWORD):#如果取消密码
-            print("resetpassword")
-            af["saltpassword"]=None
-            af["salt"]=None
-            del af["password"]
-        else:
-            af = CreateSaltAndPassword(af)
-    if ("name" not in af) or (af["name"]=="") or (af["name"]==None):#必须有name字段，登录验证由session处理
-        af["name"]=PUBLICUSER
-        af["uid"]=PUBLICUSER
-    if CheckUserName(af["name"]) and CheckTitle(af["title"]):
+        
+def SubmitArtical(ActionInfo):
+#ActionInfo=('title','name','essay','permission','blgroup','password','prikey','pubkey')
+    ActionInfo["title"] = CleanTitle(ActionInfo["title"])
+    ActionInfo["essay"] = CleanArtical(ActionInfo["essay"])
+    
+    if "name" not in ActionInfo:#必须有name字段，登录验证由session处理
+        ActionInfo["name"]=PUBLICUSER
+        ActionInfo["uid"]=PUBLICUSER
+    if "author" not in ActionInfo:#必须有author字段
+        ActionInfo["author"]=PUBLICUSER
+        
+    #检查文章种类
+    if ActionInfo["type"] in ARTICALTYPELIST:
         try:
-            if sqllib.EditArtical(af) is True:
-                return ({"state":"success"})
+            if CheckTitle(ActionInfo["title"]):
+                sqllib.CreatArtical (ActionInfo)
+                return({"state":"success"})
+            else:
+                return({"state":"Title Err"})
         except Exception as e:
+            print(traceback.format_exc())
             if ("Duplicate entry" in str(e)):
                 return({"state":"标题重复"})
             return("未知错误")
+    else:
+        return (ARTICLETYPEERR)
+        
+def EditArtical(ActionInfo):#修改文章
+#ActionInfo=('title','name','essay','permission','blgroup','password','prikey','pubkey')
+    ActionInfo["rawtitle"] = CleanTitle(ActionInfo["rawtitle"])
+    ActionInfo["title"] = CleanTitle(ActionInfo["title"])
+    ActionInfo["essay"] = CleanArtical(ActionInfo["essay"])
+    
+    if "name" not in ActionInfo:#必须有name字段，登录验证由session处理
+        ActionInfo["name"]=PUBLICUSER
+        ActionInfo["uid"]=PUBLICUSER
+    if "author" not in ActionInfo:#必须有author字段
+        ActionInfo["author"]=PUBLICUSER
+        
+    if ActionInfo["type"] in ARTICALTYPELIST:
+        if "password" in ActionInfo:
+            if ActionInfo["password"]==str(RESETARTCALPASSWORD):#如果取消密码
+                print("resetpassword")
+                ActionInfo["saltpassword"]=None
+                ActionInfo["salt"]=None
+                del ActionInfo["password"]
+            else:
+                ActionInfo = CreateSaltAndPassword(ActionInfo)
 
-def DeleteArticalByNameTitle (af):
-    af["title"] = CleanTitle(af["title"])
-    if "uid" in af:#必须有uid字段，登录验证由session处理
+        if CheckUserName(ActionInfo["name"]) and CheckTitle(ActionInfo["title"]):
+            try:
+                if sqllib.EditArtical(ActionInfo) is True:
+                    return ({"state":"success"})
+            except Exception as e:
+                if ("Duplicate entry" in str(e)):
+                    return({"state":"标题重复"})
+                else:
+                    print(traceback.format_exc())
+                return("未知错误")
+    else:
+        return (ARTICLETYPEERR)
+        
+def DeleteArticalByNameTitle (ActionInfo):
+    ActionInfo["title"] = CleanTitle(ActionInfo["title"])
+    
+    if "author" not in ActionInfo:#必须有author字段
+        ActionInfo["author"]=PUBLICUSER
+        
+    if "uid" in ActionInfo:#必须有uid字段，登录验证由session处理
+        ActionInfo["author"] = ActionInfo.get("author",ActionInfo["name"])
         try:
-            sqllib.DeleteArticalByNameTitle(af)
+            sqllib.DeleteArticalByNameTitle(ActionInfo)
             return "success"
         except Exception as e:
-            print("DeleteArticalByNameTitle",e)
+            print(traceback.format_exc())
             return(str(e))
     return "Failed"
     
-def GetArticalList(af):
-    if "uid" not in af:#必须有uid字段否则视为未登录，登录验证由session处理
-        af["name"]=PUBLICUSER
-        af["uid"]=PUBLICUSER
-    if ("page" not in af) or (int(af["page"])<1):
-        af["page"] = 1
+def GetArticalList(ActionInfo):
+
+    if "name" not in ActionInfo:#必须有uid字段否则视为未登录，登录验证由session处理
+        ActionInfo["name"]=PUBLICUSER
+        ActionInfo["uid"]=PUBLICUSER
+    if "author" not in ActionInfo:
+        ActionInfo["author"]=PUBLICUSER
+        
+    if ("page" not in ActionInfo) or (int(ActionInfo["page"])<1):
+        ActionInfo["page"] = 1
     else:
-        af["page"] = int(af["page"])
-    if ("eachpage" not in af):
-       af["eachpage"] = EACHPAGENUM
-    if CheckUserName(af["name"]):
+        ActionInfo["page"] = int(ActionInfo["page"])
+    if ("eachpage" not in ActionInfo):
+       ActionInfo["eachpage"] = EACHPAGENUM
+    if CheckUserName(ActionInfo["name"]):
+    #权限不足时如何报错
         try:
-            result = sqllib.GetArticalList (af)
-            count = sqllib.CountArticalList (af)
+            res = sqllib.GetArticalList (ActionInfo)
+            count = res["count"]
+            result = res["result"]
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
             return("GetArticalList未知错误",0,False)
         for artical in result:
             artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
@@ -186,7 +220,6 @@ def GetArticalList(af):
             else:
                 artical["password"]=1
             del artical["saltpassword"]
-        #print(result)
         return(result,count,True)
     else:
         return("Name Err",0,False)
@@ -196,7 +229,7 @@ def SpiderResponser(url):
     try:
         a = re.match(s, url).groups()#1,3
     except:
-        pass
+        print(traceback.format_exc())
     #print (a[0],a[1],a[2],a[3])
     if (a[1] != "list"):
         return GetSpiderArticle(a[1],a[3])
@@ -230,14 +263,14 @@ def GetSpiderArticleList(list,user):
     res = GetArticalList(af)
     return 0
     
-def SearchArticalList(af):
-    if "name" not in af:#必须有name字段否则视为未登录，登录验证由session处理
-        af["name"]=PUBLICUSER
-        af["uid"]=PUBLICUSER
-    af["keyword"] = af["keyword"].strip()
-    if CheckUserName(af["name"]) and CheckKeyWord(af["keyword"]):
+def SearchArticalList(ActionInfo):
+    if "name" not in ActionInfo:#必须有name字段否则视为未登录，登录验证由session处理
+        ActionInfo["name"]=PUBLICUSER
+        ActionInfo["uid"]=PUBLICUSER
+    ActionInfo["keyword"] = ActionInfo["keyword"].strip()
+    if CheckUserName(ActionInfo["name"]) and CheckKeyWord(ActionInfo["keyword"]):
         try:
-            result = sqllib.SearchArtical (af)
+            result = sqllib.SearchArtical (ActionInfo)
             for artical in result:
                 artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
                 artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
@@ -245,7 +278,7 @@ def SearchArticalList(af):
                     del artical["name"]
             return(result,True)
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
             return("SearchArticalList未知错误",False)
     else:
         return({"state":"Failed"},False)
@@ -286,7 +319,7 @@ def CreateUser(uf):#生成用户，生成uid，生成盐
                     print(err)
                     return (err,False)
             else:
-                print(e)
+                print(traceback.format_exc())
                 return (e,False)
     else:
         return ("Name Or Password Err",False)

@@ -1,18 +1,91 @@
+
 #/usr/bin/python3.4
+import traceback
 import pymysql
 import base64
 import time
+import json
+from pprint import pprint
 try:
     from note.config import *
+    import note.permission as Permission
 except:
     from config import *
+    import permission as Permission
+####################################
+#
+#预操作接口
+#
+####################################  
+def api (function,**arg):#快速创建用户
+    column = ('uid','name','saltpassword','mail','salt','permission','time')
+    Column = str(column).replace("'","`")
+    conn = pymysql.connect(**SQLCONFIG)
+    cursor = conn.cursor()
+    function(cursor,**arg)
+    cursor.close()
+    conn.commit()
+    conn.close()
+    return True
+    
+####################################
+#
+#权限查询接口
+#
+####################################
+def MixPermission(Group, Addition):
+    if Group is None:    
+        Group = "Default"
+    per  = dict(USER_GROUP[Group])
+    if Addition is None:
+        return per
+    else:
+        Addition  = json.loads(Addition)
+        per.update(Addition)
+    return per
+    
+def GetUserPermission (cursor,uid):
+    UserColumn = ('permission','group')
+    SqlUserField = str(UserColumn).replace("'","`")[1:-1]
+    UserSql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `uid`=%s"""
+    cursor.execute(UserSql,(uid))
+    value = cursor.fetchone()
+    if value is not None:
+        permission = dict(map(lambda x,y:[x,y],UserColumn,value))
+        per = MixPermission(permission["group"],permission["permission"])
+        return per
+    elif value is None:
+        return("No Such Uid %s"%(uid))
+    else:
+        return("GetUserPermission Failed")
+        
+def GetArticleInfo (cursor,title,uid):
+    ArticleColumn = ('id','uid','blgroup','permission')
+    SqlArticleField = str(ArticleColumn).replace("'","`")[1:-1]
+    Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `title`=%s AND `uid`=%s"""
+    cursor.execute(Sql,(title,uid))
+    value = cursor.fetchone()
+    if value is not None:
+        ArticleInfo = dict(map(lambda x,y:[x,y],ArticleColumn,value))
+        if ArticleInfo["permission"] is None:
+            ArticleInfo["permission"] = {}
+        else:
+            ArticleInfo["permission"] = json.loads(ArticleInfo["permission"])
+        UserPermission = GetUserPermission(cursor,ArticleInfo["uid"])
+        UserPermission.update(ArticleInfo["permission"])
+        ArticleInfo["permissions"] = UserPermission
+        return ArticleInfo
+    elif value is None:
+        return("No Such title %s"%(title))
+    else:
+        return("GetArticlePermission Failed")
 ####################################
 #
 #用户操作
 #
 ####################################      
 def FastCreateUser (uf):#快速创建用户
-    column = ('uid','name','saltpassword','mail','salt','right','time')
+    column = ('uid','name','saltpassword','mail','salt','permission','time')
     Column = str(column).replace("'","`")
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
@@ -35,25 +108,27 @@ def CreateUser (uf):#创建用户
     conn.close()
     return True
 
-def GetUid (name,cursor,*l):#快速查询uid，right，group,可追加字段
+def GetUid (name,cursor,*l):#快速查询uid，permission，group,可追加字段
     uf={}
-    usercolumn=['uid','name','right','group']
+    usercolumn=['uid','name','permission','articalnum','group']
     usercolumn.extend(l)
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `name`=%s """
     cursor.execute(sql,(name))
     value = cursor.fetchone()
+    print (value)
     if value is not None:
         uf = dict(map(lambda x,y:[x,y],usercolumn,value))
+        uf["permissions"] = MixPermission(uf["group"],uf["permission"])
     elif value is None:
         return("No Such User %s"%(name))
     else:
         return("CreatArtical Failed")
     return uf
     
-def GetName (uid,cursor,*l):#快速查询uid，right，group
+def GetName (uid,cursor,*l):#快速查询uid，permission，group
     uf={}
-    usercolumn=['uid','name','right','group']
+    usercolumn=['uid','name','permission','articalnum','group']
     usercolumn.extend(l)
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `uid`=%s """
@@ -61,16 +136,17 @@ def GetName (uid,cursor,*l):#快速查询uid，right，group
     value = cursor.fetchone()
     if value is not None:
         uf = dict(map(lambda x,y:[x,y],usercolumn,value))
+        uf["permissions"] = MixPermission(uf["group"],uf["permission"])
     elif value is None:
         return("No Such Uid %s"%(name))
     else:
         return("CreatArtical Failed")
     return uf
 
-def GetUserInfo (af):#获取user信息
+def GetUserInfo (ActionInfo):#获取user信息
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    value = GetUid (af["name"],cursor,"mail")
+    value = GetUid (ActionInfo["name"],cursor,"mail")
     cursor.close()
     conn.commit()
     conn.close()
@@ -78,7 +154,7 @@ def GetUserInfo (af):#获取user信息
     
 def GetLoginInfo (uf):#登录查询用
     #id,uid,name
-    logincolumn=('uid','name','salt','saltpassword','lgnfailedtimes','lastfailedtime')
+    logincolumn=('uid','name','salt','saltpassword','permission','group','lgnfailedtimes','lastfailedtime')
     SqlUserField = str(logincolumn).replace("'","`")[1:-1]
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
@@ -96,6 +172,7 @@ def GetLoginInfo (uf):#登录查询用
         return None
     d = dict(map(lambda x,y:[x,y],logincolumn,value))
     d["now"] = time
+    d['permissions'] = MixPermission(d['group'], d['permission'])
     return d
     
 def LoginFailed (uf):#登录失败计数
@@ -139,20 +216,20 @@ def ResetPassword (uf):#重置密码
 #
 ####################################
 def GetRemark (uid,title,cursor,*l):#快速查询remark 等
-    af={}
-    usercolumn=['remark','right']
+    ActionInfo={}
+    usercolumn=['remark','permission']
     usercolumn.extend(l)
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s"""
     cursor.execute(sql,(uid,title))
     value = cursor.fetchone()
     if value is not None:
-        af = dict(map(lambda x,y:[x,y],usercolumn,value))
+        ActionInfo = dict(map(lambda x,y:[x,y],usercolumn,value))
     elif value is None:
         return("No Such Uid %s Title %s"%(uid,title))
     else:
         return("GetRemark Failed")
-    return af
+    return ActionInfo
     
 def b64(text):
     if text is None:
@@ -161,63 +238,80 @@ def b64(text):
     encodestr = base64.b64encode(bytesString)
     return (encodestr.decode())
     
-def FastCreatArtical (af):#快速创建文章
-    Articalcolumn = ('uid','title','right','essay','pubtime','lastesttime')
+def FastCreatArtical (ActionInfo):#快速创建文章
+    Articalcolumn = ('uid','title','permission','essay','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     #创建文章
-    sql =   """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,now(),now())"""
-    cursor.execute(sql,(af.get("uid",PUBLICUSER),af["title"],af.get("right",0),af["essay"]))
+    ArticleSql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,now(),now())"""
+    cursor.execute(ArticleSql,(ActionInfo.get("uid",PUBLICUSER),ActionInfo["title"],ActionInfo.get("permission",0),ActionInfo["essay"]))
+    UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`+1) where `uid`=%s"""
+    cursor.execute(UserSql,(ActionInfo.get("uid",PUBLICUSER)))
     cursor.close()
     conn.commit()
     conn.close()
     return True
 
-def CreatArtical (af):#创建文章
-    Articalcolumn = ('title','uid','name','essay','type','tag','right','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
+def CreatArtical (ActionInfo):#创建文章
+    Articalcolumn = ('title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     #获取用户信息,鉴权
-    uf = GetName (af["uid"],cursor)
-    af["name"] = uf["name"]
-    if uf is not None:
-        af["uid"] = uf["uid"]
-        af["right"] = min(int(uf["right"]),int(af.get("right",1)))#取数字最小值做权限
-        if (uf["group"] is None) or ("blgroup" not in af) or (af["blgroup"] not in value[2]):
-            af["blgroup"] = None
-    elif uf is None:
-        return("No Such User %s"%(af["uid"]))
+    uf = GetName (ActionInfo["uid"],cursor)
+    if uf is None:
+        cursor.close()
+        conn.commit()
+        conn.close()
+        return("No Such User %s"%(ActionInfo["uid"]))
+        
+    ActionInfo.update(uf)
+
+    ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
+
+    Per = Permission.CreateArticle(ActionInfo,ActionInfo["authorInfo"])
+    print(Per)
+    if Per is True:
+        #创建文章
+        ArticleSql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
+        cursor.execute(ArticleSql,(ActionInfo["title"],ActionInfo["authorInfo"]["uid"],ActionInfo["name"],ActionInfo["essay"],ActionInfo.get("type",DEFAULTARTICALTYPE),ActionInfo.get("tag",None),ActionInfo.get("permission",None),ActionInfo.get("blgroup",None),ActionInfo.get("salt",None),ActionInfo.get("saltpassword",None),ActionInfo.get("remark",None)))
+        #若上句执行错误则不会执行下句
+        UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`+1) where `uid`=%s"""
+        cursor.execute(UserSql,(ActionInfo["uid"]))
     else:
-        return("CreatArtical Failed")
-    #创建文章
-    sql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
-    cursor.execute(sql,(af["title"],af["uid"],af["name"],af["essay"],af.get("type",DEFAULTARTICALTYPE),af.get("tag",None),af.get("right",0),af.get("blgroup",None),af.get("salt",None),af.get("saltpassword",None),af.get("remark",None)))
+        cursor.close()
+        conn.commit()
+        conn.close()
+        return(Per)
     cursor.close()
     conn.commit()
     conn.close()
     return True    
 
-def EditArtical (af):
-    ARTICALFIELD=('title','essay','type','tag','right','blgroup','salt','saltpassword','remark')
+def EditArtical (ActionInfo):
+    ARTICALFIELD=('title','essay','type','tag','permission','blgroup','salt','saltpassword','remark')
     #拼接set语句
     SetUpdateColumn = ""
     SetUpdateInfo=[]
     for key in ARTICALFIELD:
-        if key in af:
+        if key in ActionInfo:
             SetUpdateColumn = SetUpdateColumn+"`"+str(key)+"`=%s,"
-            SetUpdateInfo.append(af[key])
+            SetUpdateInfo.append(ActionInfo[key])
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     #获取用户信息,鉴权
-    if af.get("uid",None) is None:#没有uid就用name获取
-        uf = GetUid(af['name'],cursor)
-        af["uid"] = uf["uid"]
-        af["right"] = uf["right"]
-        af["group"] = uf["group"]
-    SetUpdateInfo.append(af["uid"])
-    SetUpdateInfo.append(af["rawtitle"])
+    if "uid" not in ActionInfo:#没有uid就用name获取
+        ActionInfo.update(GetUid(ActionInfo['name'],cursor))
+        
+    ActionInfo.update(GetName(ActionInfo['uid'],cursor))
+    ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
+
+    ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
+    pprint(ArticleInfo)
+    t = Permission.EditArticle(ActionInfo,ArticleInfo)
+    SetUpdateInfo.append(ActionInfo["authorInfo"]["uid"])
+    SetUpdateInfo.append(ActionInfo["rawtitle"])
     sql = """update """+TABLE["artical"]+""" set """+SetUpdateColumn+"""`lastesttime`=now() where `uid`=%s AND `title`=%s"""
     num = cursor.execute(sql,SetUpdateInfo)
     if num>1:
@@ -231,62 +325,114 @@ def EditArtical (af):
         return True
     else:
         return num
-
-def GetArtical (af):#直接获取文章信息
-    Articalcolumn=('id','uid','name','title','essay','type','tag','right','blgroup','pubtime','lastesttime','salt','saltpassword')
-    ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
-    ######
-    #拼接索搜语句
-    ######
+        
+def DeleteArticalByNameTitle (ActionInfo):#必须登陆后才能删除，必须带uid
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND  (`id`=%s OR `title`=%s)"""
-    cursor.execute(sql,(af["name"],af.get("id",None),af.get("title",None)))
-    value = cursor.fetchone()
+    uf = GetUid(ActionInfo['name'],cursor)
+    
+    ActionInfo.update(uf)
+    ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
+    ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo['authorInfo']['uid'])
+    
+    Per = Permission.DeleteArticle(ActionInfo,ArticleInfo)
+    if Per is True:
+        #DELETE FROM 表名称 WHERE 列名称 = 值
+        ArticleSql =  """DELETE from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s """
+        values = cursor.execute(ArticleSql,(ActionInfo["uid"],ActionInfo["title"]))
+        UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`-1) where `uid`=%s"""
+        cursor.execute(UserSql,(ActionInfo["uid"]))
+    else:
+        value = 0
     cursor.close()
     conn.commit()
     conn.close()
-    if value is not None:
-        d = dict(zip(Articalcolumn,value))
-        return d
-    return None
-
-def GetArticalList (af):#获取文章列表
-    #af应有page一项,eachpage
-    Articalcolumn=('id','name','title','type','tag','saltpassword','right','blgroup','pubtime','lastesttime')#,'essay'
+    return values
+        
+def GetArtical (ActionInfo):#直接获取文章信息
+    Articalcolumn=('id','uid','name','title','essay','type','tag','permission','blgroup','pubtime','lastesttime','salt','saltpassword')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
+    conn = pymysql.connect(**SQLCONFIG)
+    cursor = conn.cursor()
     ######
     #拼接索搜语句
     ######
+    ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
+    ActionInfo.update(GetName(ActionInfo['uid'],cursor))
+    #pprint(ActionInfo)
+    ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
+    if ActionInfo["mode"] == "edit":
+        Per = Permission.EditArticle(ActionInfo,ArticleInfo)
+    else:
+        Per = Permission.ReadArticle(ActionInfo,ArticleInfo)
+    if Per is True:
+        sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND  (`id`=%s OR `title`=%s)"""
+        cursor.execute(sql,(ActionInfo["author"],ActionInfo.get("id",None),ActionInfo.get("title",None)))
+        value = cursor.fetchone()
+        cursor.close()
+        conn.commit()
+        conn.close()
+        if value is not None:
+            d = dict(zip(Articalcolumn,value))
+            return d
+        else:
+            return None
+    else:
+        return None
+
+def GetArticalList (ActionInfo):#获取文章列表
+    #ActionInfo应有page一项,eachpage
+    Articalcolumn=('id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime')#,'essay'
+    ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
-    cursor.execute(sql,(af["uid"],(af["page"]-1)*af["eachpage"],af["eachpage"]))
-    values = cursor.fetchall()
-    cursor.close()
-    conn.commit()
-    conn.close()
-    result = []
-    for value in values:
-        d = dict(zip(Articalcolumn,value))
-        d["ifpassword"] = False if (d["saltpassword"]==None) else True
-        result.append(d)
-    print(len(values))
-    return result
-
-def CountArticalList (af):#获取用户文章数目
+    
+    ######
+    #拼接索搜语句
+    ######
+    
+    ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
+    ActionInfo.update(GetName(ActionInfo['uid'],cursor))
+    #pprint(ActionInfo)
+    Per = Permission.ReadArticleList(ActionInfo,ActionInfo["authorInfo"])
+    
+    if Per is True:
+        sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
+        cursor.execute(sql,(ActionInfo["authorInfo"]["uid"],(ActionInfo["page"]-1)*ActionInfo["eachpage"],ActionInfo["eachpage"]))
+        values = cursor.fetchall()
+        CountSql =  """select COUNT(*) from """+TABLE["artical"]+""" WHERE `uid`=%s"""
+        cursor.execute(CountSql,(ActionInfo["authorInfo"]["uid"]))
+        num = cursor.fetchall()
+        cursor.close()
+        conn.commit()
+        conn.close()
+        res = {"result":[]}
+        res["count"] = num
+        for value in values:
+            d = dict(zip(Articalcolumn,value))
+            d["ifpassword"] = False if (d["saltpassword"]==None) else True
+            res["result"].append(d)
+        return res
+    else:
+        cursor.close()
+        conn.commit()
+        conn.close()
+        return None
+        
+def CountArticalList (ActionInfo):#获取用户文章数目#废弃
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
     sql =  """select COUNT(*) from """+TABLE["artical"]+""" WHERE `uid`=%s"""
-    cursor.execute(sql,(af["uid"]))
+    cursor.execute(sql,(ActionInfo["uid"]))
     values = cursor.fetchall()
     cursor.close()
     conn.commit()
     conn.close()
     return values
     
-def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
-    Articalcolumn=('id','name','title','essay','type','right','blgroup','pubtime','lastesttime')
+def SearchArtical (ActionInfo):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
+    #搜索权限设计？
+    Articalcolumn=('id','name','title','essay','type','permission','blgroup','pubtime','lastesttime')
     ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
@@ -295,12 +441,12 @@ def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个�
     ######
     conn = pymysql.connect(**SQLCONFIG)
     cursor = conn.cursor()
-    if "uid" not in af:
-        af["uid"]=GetUid (af.get("name",PUBLICUSER),cursor)["uid"]
-    keyword = '%'+af['keyword'].replace(" ","%")+'%'
+    if "uid" not in ActionInfo:
+        ActionInfo["uid"]=GetUid (ActionInfo.get("name",PUBLICUSER),cursor)["uid"]
+    keyword = '%'+ActionInfo['keyword'].replace(" ","%")+'%'
     sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE ( `uid`=%s OR `uid`=%s ) AND 
     `saltpassword` is NULL AND ( `essay` LIKE %s OR  `title` LIKE %s) LIMIT 0,20"""
-    cursor.execute(sql,(af["uid"],PUBLICUSER,keyword,keyword))
+    cursor.execute(sql,(ActionInfo["uid"],PUBLICUSER,keyword,keyword))
     values = cursor.fetchall()
     cursor.close()
     conn.commit()
@@ -310,16 +456,6 @@ def SearchArtical (af):#简单搜索#必须保证搜索词为关键词用单个�
         result.append(dict(zip(Articalcolumn,value)))
     return result
 
-def DeleteArticalByNameTitle (af):#必须登陆后才能删除，必须带uid
-    conn = pymysql.connect(**SQLCONFIG)
-    cursor = conn.cursor()
-    #DELETE FROM 表名称 WHERE 列名称 = 值
-    sql =  """DELETE from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s """
-    values = cursor.execute(sql,(af["uid"],af["title"]))
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return values
 ####################################
 #
 #初始化表
@@ -335,7 +471,7 @@ def DefineUserTable ():#取得查询所需的关键字
             `mail`  varchar(50) CHARACTER SET utf8 NOT NULL  ,
             `salt`  text CHARACTER SET utf8 NOT NULL ,
             `saltpassword`  text CHARACTER SET utf8 NOT NULL ,
-            `right`  int DEFAULT 0,
+            `permission`  text CHARACTER SET utf8 NULL,
             `articalnum`  int DEFAULT 0 ,
             `lgnfailedtimes`  int DEFAULT 0 ,
             `group`  text CHARACTER SET utf8 NULL ,
@@ -365,7 +501,7 @@ def DefineArticalTable ():#文章表
             `essay`  longtext CHARACTER SET utf8 NOT NULL ,
             `type`  varchar(40) CHARACTER SET utf8 NOT NULL ,
             `tag`  text CHARACTER SET utf8 NULL ,
-            `right`  int DEFAULT 0,
+            `permission`  text CHARACTER SET utf8 NULL ,
             `blgroup`  varchar(255) CHARACTER SET utf8 NULL ,
             `salt`  text CHARACTER SET utf8 NULL ,
             `saltpassword`  text CHARACTER SET utf8 NULL ,
@@ -395,7 +531,7 @@ def DefineArticalSearchTable ():#文章查询表
             `b64title`  varchar(255) CHARACTER SET utf8 NOT NULL ,
             `b64essay`  longtext CHARACTER SET utf8 NOT NULL ,
             `b64tag`  text CHARACTER SET utf8 NULL ,
-            `right`  int DEFAULT 0,
+            `permission`  int DEFAULT 0,
             `blgroup`  varchar(255) CHARACTER SET utf8 NULL ,
             `b64remark`  text CHARACTER SET utf8 NULL ,
             `pubtime`  datetime NOT NULL ,

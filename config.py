@@ -1,15 +1,8 @@
-# SQLCONFIG={'host':'',#默认127.0.0.1
-        # 'user':'',
-        # 'password':'',
-        # 'port':3306 ,#默认即为3306
-        # 'database':'',
-        # 'charset':'utf8'#默认即为utf8
-        # }
-SQLCONFIG={'host':'5739d1cc363d7.sh.cdb.myqcloud.com',#默认127.0.0.1
-        'user':'cdb_outerroot',
-        'password':'753951Qwe',
-        'port':4602 ,#默认即为3306
-        'database':'MapleDB',
+SQLCONFIG={'host':'',#默认127.0.0.1
+        'user':'',
+        'password':'',
+        'port':3306 ,#默认即为3306
+        'database':'',
         'charset':'utf8'#默认即为utf8
         }
 TABLE= {'user':'Note_user',
@@ -18,9 +11,9 @@ TABLE= {'user':'Note_user',
         }
 BASE64SEARCH=False#中文分词有难度，无限期延期
 PUBLICUSER='admin'
-USERFIELD=('id','uid','name','mail','salt','saltpassword','right','articalnum','lgnfailedtimes','group','remark','time')
-ARTICALFIELD=('id','uid','title','essay','type','tag','right','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
-SEARCHFIELD=('id','uid','b64title','b64essay','b64tag','right','blgroup','b64remark','pubtime','lastesttime')
+USERFIELD=('id','uid','name','mail','salt','saltpassword','permission','articalnum','lgnfailedtimes','group','remark','time')
+ARTICALFIELD=('id','uid','title','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
+SEARCHFIELD=('id','uid','b64title','b64essay','b64tag','permission','blgroup','b64remark','pubtime','lastesttime')
 #文章类型列表
 ARTICALTYPELIST=['html/text','html','text','json','image','markdown',"code"]
 #默认文章类型
@@ -49,7 +42,7 @@ MAXSEARCHLENGTH=40
 #邮件发送地址
 MAIL_FROM_ADDR = "maple@forer.cn"
 #smtp服务器密码
-MAIL_PASSWORD = 'pass'
+MAIL_PASSWORD = '951753qwe'
 #收件地址
 MAIL_TO_ADDR = '774714620@qq.com'
 #smtp服务器
@@ -75,11 +68,22 @@ MAIL_ARTICAL_CGPASSWORD = """您账户的密码已经改变，若非本人操作
 #
 #######################
 #权限不足
-ARTICALNEEDRIGHT={
-"title":"No Enough Rights",
+ARTICALNEEDpermission={
+"title":"No Enough permissions",
 "essay":"You Can't Edit Other User's Article",
 "state":"success"
 }
 ARTICLETYPEERR={
 "state":"Invalid Article Type"
 }
+
+
+#######################
+#
+#权限组
+#
+#######################
+try:
+    from note.group import *
+except:
+    from group import *

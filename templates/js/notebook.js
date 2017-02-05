@@ -80,6 +80,7 @@ function checkloginstate() {
         type: 'POST',
         url: '/chkls/',
         data: {
+            "mode":"CheckLoginState",
             "name": getCookie("name"),
         },
         dataType: 'json',
@@ -198,7 +199,9 @@ function autogetartical() {
     if (a[2] != "undefined" && a[4] != "undefined") {
         var name_path = a[1];
         var postdata = {
-            "name": a[2],
+            "mode":"GetArticle",
+            "name": cookie_name,
+            "author": a[2],
             "title": a[4],
             "password": sha256($("#Modal-artical-passwords").val()),
         };
@@ -208,6 +211,7 @@ function autogetartical() {
     } else if (a[2] != "undefined" && a[4] == "undefined") {
         var name_path = "";
         var postdata = {
+            "mode":"GetArticle",
             "title": a[2],
             "password": sha256($("#Modal-artical-passwords").val()),
         };
@@ -236,7 +240,6 @@ function autogetartical() {
                 var essay = data.essay;
                 var href =  encodeURI(name_path) + encodeURIComponent(title);
                 document.getElementById("showtitle").innerHTML = isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title;
-                //document.getElementById("showartical").innerHTML = essay.replace(/\n/g, "<br>");
                 document.getElementById("showartical").innerHTML = FormatEssay(essay,data.type);
                 document.getElementById("text-pubtime").value = data.pubtime;
                 document.getElementById("text-lastesttime").value = data.lastesttime;
@@ -244,14 +247,10 @@ function autogetartical() {
                 $("#text-type").val(data.type);
             } else if (data.state == "Need Password") {
                 $("#Modal-artical-password").modal("show");
-                //document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
-                //document.getElementById("showartical").innerHTML = "";
                 document.getElementById("showtitle").innerHTML = data.title;
                 document.getElementById("showartical").innerHTML = data.essay;
             } else {
                 $("#Modal-artical-password").modal("hide");
-                //document.getElementById("showtitle").innerHTML = "NO SUCH ARTICAL";
-                //document.getElementById("showartical").innerHTML = "";
                 document.getElementById("showtitle").innerHTML = data.title;
                 document.getElementById("showartical").innerHTML = data.essay;
             }
@@ -270,6 +269,7 @@ function GetArticleList() { //获取文章列表
     //alert(a[5]);
     var html = document.getElementById("listshower");
     var pagehtml = document.getElementById("list-page");
+    var cookie_name = unescape(getCookie("name"));
     html.innerHTML = "";
     pagehtml.innerHTML = "";
     $("#title-editer").hide();
@@ -277,12 +277,16 @@ function GetArticleList() { //获取文章列表
     $("#shower").hide();
     if (!a[3]) {
         postdata = {
+            'mode':'GetArticleList',
+            'name': cookie_name,
             "page":page
         }
         //name = ""
     } else {
         postdata = {
-            'name': a[4],
+            'mode':'GetArticleList',
+            'name': cookie_name,
+            'author':a[4],
             "page":page
         }
     }
@@ -352,15 +356,16 @@ function EditArtical() {
     var isname = 0
         if (a[3] != "undefined" && a[5] != "undefined") {
             postdata = {
-                "name": a[3],
-                "title": a[5],
                 "mode": "edit",
+                "name": cookie_name,
+                "author": a[3],
+                "title": a[5]
             }
             isname = 1
         } else if (a[3] != "undefined" && a[5] == "undefined") {
             postdata = {
-                "title": a[3],
                 "mode": "edit",
+                "title": a[3]
             }
         }
         $.ajax({
@@ -439,6 +444,7 @@ function SearchArtical() {
         type: 'POST',
         url: '/search/',
         data: {
+            'mode':"SearchArticle",
             'keyword': keyword,
             'name': getCookie("name")
         },
@@ -626,12 +632,15 @@ function() { //提交文章
     var rawtitle = document.getElementById("text-edit-submit").value;
     var title = $("#text-title").val();
     var essay = $("#text-artical").val();
+    var cookie_name = unescape(getCookie("name"));
     var postdata = {
+        "mode":"SubmitEditedArticle",
         "title": title,
         "essay": essay,
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
-        "name": name,
+        "author":name,
+        "name": cookie_name,
         "rawtitle": rawtitle,
         "type":$('#text-type option:selected').val()
     };
@@ -676,10 +685,12 @@ function() {
     var title = document.getElementById("text-title").value;
     var essay = document.getElementById("text-artical").value;
     var postdata = {
+        "mode":"SubmitArticle",
         "title": title,
         "essay": essay,
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
+        "author": getCookie("name"),
         "name": getCookie("name"),
         "type":$('#text-type option:selected').val()
     };
@@ -738,6 +749,8 @@ function() { //提交文章
         type: 'POST',
         url: '/deleteartical/',
         data: {
+            "mode":"DeleteArticle",
+            "author":getCookie("name"),
             "title": title,
             "name": getCookie("name")
         },
@@ -770,6 +783,7 @@ function() { //提交登录
         type: 'POST',
         url: '/login/',
         data: {
+            "mode":"Login",
             "name": $("#login-name").val(),
             "password": sha256($("#login-password").val())
         },
@@ -826,6 +840,7 @@ function logout() {
         type: 'GET',
         url: '/logout/',
         data: {
+            "mode":"Logout",
             "name": getCookie("name")
         },
         dataType: 'json',
@@ -909,6 +924,7 @@ function() //提交注册
             type: 'POST',
             url: '/register/',
             data: {
+                "mode":"Register",
                 "name": name,
                 "mail": mail,
                 "password": password1
@@ -1067,6 +1083,7 @@ function() {
             type: 'POST',
             url: '/changepassword/',
             data: {
+                "mode":"ChangePassword",
                 "name": getCookie("name"),
                 "password": sha256($("#change-oldpassword").val()),
                 "newpassword": $("#change-confirm-newpassword").val()
@@ -1117,6 +1134,7 @@ function() {
             type: 'POST',
             url: '/resetpassword/',
             data: {
+                "mode":"ResetPassword",
                 "name": $("#reset-name").val(),
                 "mail": $("#reset-mail").val()
             },

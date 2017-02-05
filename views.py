@@ -14,56 +14,62 @@ def index(request):
 @ensure_csrf_cookie
 def CheckLogin(request):
     if request.is_ajax() and request.method == 'POST':
-        userinfo={}
-        dict = getpostdict(request)
+        ActionInfo={}
+        ActionInfo = getpost(request)
         if ("uid" in request.session) and ("name" in request.session):#是否需要验证客户端cookie？
-            userinfo["loginstate"]=1
-            userinfo["name"]=request.session["name"]
+            ActionInfo["loginstate"]=1
+            ActionInfo["name"]=request.session["name"]
         else:
-            userinfo["loginstate"]=0
-        userinfo["state"]="success"
-        print(userinfo)
-        return HttpResponse(json.dumps(userinfo)) 
+            ActionInfo["loginstate"]=0
+        ActionInfo["state"]="success"
+        print(ActionInfo)
+        return HttpResponse(json.dumps(ActionInfo)) 
         
 @ensure_csrf_cookie
 def submitartical(request):
     if request.is_ajax() and request.method == 'POST':
-        dict = getpostdict(request)
-        if request.session.get("name",None) == dict["name"]:#对自己
-            dict["uid"]=request.session["uid"]
-        elif dict["name"]=="" or dict["name"] is None:#是否为公用账户#对公用账户
-            dict.pop("uid","")
+        ActionInfo = getpost(request)
+        if ("name" in ActionInfo) and ActionInfo["name"]!="" and ActionInfo["name"]!=None:
+            (ActionInfo,logined) = checklogininfo(request,ActionInfo)
+            if logined:
+                info = Note.SubmitArtical(ActionInfo)
+                return HttpResponse(json.dumps(info))
+            else:
+                return HttpResponse(json.dumps('{"state":"%s"}'%str("请重新登录")))
         else:
-            return HttpResponse('{"state":"%s"}'%str("请重新登录")) 
-        info = Note.SubmitArtical(dict)
-        return HttpResponse(json.dumps(info))  
+            logout(request)
+            ActionInfo.pop('name',None)
+            info = Note.SubmitArtical(ActionInfo)
+            return HttpResponse(json.dumps(info))
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
 def editartical(request):
+    print("editartical",request.session.keys())
     if request.is_ajax() and request.method == 'POST':
-        dict = getpostdict(request)
-        #print("editartical",dict)
-        if ("name" in dict) and dict["name"]!="":
-            (dict,logined) = checklogininfo(request,dict)
+        ActionInfo = getpost(request)
+        #print("editartical",ActionInfo)
+        if ("name" in ActionInfo) and ActionInfo["name"]!=""  and ActionInfo["name"]!=None:
+            (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
-                info = Note.EditArtical(dict)
+                info = Note.EditArtical(ActionInfo)
                 return HttpResponse(json.dumps(info))
             else:
                 return HttpResponse(json.dumps({"state":"Need Login"}))
         else:
-            info = Note.EditArtical(dict)
+            ActionInfo.pop('name',None)
+            info = Note.EditArtical(ActionInfo)
             return HttpResponse(json.dumps(info))
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
 def deleteartical(request):
     if request.is_ajax() and request.method == 'POST' and "uid" in request.session:
-        dict = getpostdict(request)
-        (dict,logined) = checklogininfo(request,dict)#
+        ActionInfo = getpost(request)
+        (ActionInfo,logined) = checklogininfo(request,ActionInfo)#
         if logined:
-            if "title" in dict:
-                state = Note.DeleteArticalByNameTitle(dict)
+            if "title" in ActionInfo:
+                state = Note.DeleteArticalByNameTitle(ActionInfo)
                 print('deleteartical',json.dumps({"state":state}))
                 return HttpResponse(json.dumps({"state":state}))
             else:
@@ -73,10 +79,12 @@ def deleteartical(request):
 @ensure_csrf_cookie
 def getartical(request,keyword=None):
     if request.is_ajax() and request.method == 'POST':
-        dict = getpostdict(request)
-        (dict,iflogin) = checklogininfo(request,dict)
-        print("getartical",dict)
-        artical = Note.GetArtical(dict)#getartical by
+        ActionInfo = getpost(request)
+        (ActionInfo,logined) = checklogininfo(request,ActionInfo)
+        if not logined:
+            ActionInfo.pop('name',None)
+        print("getartical",ActionInfo)
+        artical = Note.GetArtical(ActionInfo)#getartical by
         return HttpResponse(json.dumps(artical))
     #判断spider
     elif "spider" in request.META.get('HTTP_USER_AGENT', "").lower():
@@ -85,35 +93,18 @@ def getartical(request,keyword=None):
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
-def login(request):
-    if request.is_ajax() and request.method == 'POST':
-        print('login')
-        dict = getpostdict(request)
-        (Islogin,userinfo,state) = Note.CheckUser(dict)
-        if(Islogin):
-            request.session["name"] = userinfo["name"]
-            request.session["uid"] = userinfo["uid"]
-            userinfo.pop("uid")#uid 不传回客户端
-        return HttpResponse(json.dumps(userinfo)) 
-    return render(request, 'note_index.html')
-    
-@ensure_csrf_cookie
-def register(request):
-    if request.is_ajax() and request.method == 'POST':
-    #uf should have ('name','mail','password')
-        dict = getpostdict(request)
-        (userinfo,state) = Note.CreateUser(dict)
-        print(str(userinfo),state)
-        return HttpResponse(json.dumps({'state':userinfo})) 
-    return render(request, 'note_register.html')
-    
-@ensure_csrf_cookie
 def getarticallist(request):
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
-        dict = getpostdict(request)
-        (dict,iflogin) = checklogininfo(request,dict)#未登录会返回公共列表
-        (articallist,count,state) = Note.GetArticalList(dict)#articallist是数组
+        ActionInfo = getpost(request)
+        
+        if "name" in ActionInfo:
+            (ActionInfo,logined) = checklogininfo(request,ActionInfo)#未登录会返回公共列表
+            if not logined:
+                ActionInfo.pop("name",None)
+                logout(request)
+                
+        (articallist,count,state) = Note.GetArticalList(ActionInfo)#articallist是数组        
         if (state is True):
             return HttpResponse(json.dumps({'state':'success','articallist':articallist,'count':count})) 
         else:
@@ -122,22 +113,46 @@ def getarticallist(request):
     return render(request, 'note_register.html')
     
 @ensure_csrf_cookie
+def login(request):
+    if request.is_ajax() and request.method == 'POST':
+        print('login')
+        ActionInfo = getpost(request)
+        (Islogin,ActionInfo,state) = Note.CheckUser(ActionInfo)
+        if(Islogin):
+            request.session["name"] = ActionInfo["name"]
+            request.session["uid"] = ActionInfo["uid"]
+            request.session["permissions"] = ActionInfo["permissions"]
+            ActionInfo.pop("uid")#uid 不传回客户端
+        return HttpResponse(json.dumps(ActionInfo)) 
+    return render(request, 'note_index.html')
+    
+@ensure_csrf_cookie
+def register(request):
+    if request.is_ajax() and request.method == 'POST':
+    #uf should have ('name','mail','password')
+        ActionInfo = getpost(request)
+        (ActionInfo,state) = Note.CreateUser(ActionInfo)
+        print(str(ActionInfo),state)
+        return HttpResponse(json.dumps({'state':ActionInfo})) 
+    return render(request, 'note_register.html')
+    
+@ensure_csrf_cookie
 def searchartical(request):
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
-        dict = getpostdict(request)
+        ActionInfo = getpost(request)
         if "uid" not in request.session :#未登录
             return HttpResponse(json.dumps({'state':'failed'}))
-        elif ("name" not in dict) or (dict["name"]=="") or (dict["name"]==None):
-            dict={}
-        elif request.session.get("name",None) == dict["name"]:
-            dict["uid"]=request.session["uid"]
+        elif ("name" not in ActionInfo) or (ActionInfo["name"]=="") or (ActionInfo["name"]==None):
+            ActionInfo={}
+        elif request.session.get("name",None) == ActionInfo["name"]:
+            ActionInfo["uid"]=request.session["uid"]
         else:#传入了name但是和已登录的name不同
             return HttpResponse(json.dumps({'state':'failed'}))
-        (articallist,state) = Note.SearchArticalList(dict)#articallist是数组
+        (articallist,state) = Note.SearchArticalList(ActionInfo)#articallist是数组
         if (state is True):
             #print(json.dumps({'state':'success','articallist':articallist}))
-            return HttpResponse(json.dumps({'state':'success','keyword':dict["keyword"],'articallist':articallist})) 
+            return HttpResponse(json.dumps({'state':'success','keyword':ActionInfo["keyword"],'articallist':articallist})) 
         else:
             print(json.dumps(articallist))
             return HttpResponse(json.dumps(articallist)) 
@@ -147,8 +162,8 @@ def searchartical(request):
 def ReSetPassword(request):
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name',"mail")
-        dict = getpostdict(request)
-        (result,state) = Note.ReCreateUserPassword(dict)
+        ActionInfo = getpost(request)
+        (result,state) = Note.ReCreateUserPassword(ActionInfo)
         if result:
             return HttpResponse(json.dumps({'state':"success"})) 
         else:
@@ -160,11 +175,11 @@ def ReSetPassword(request):
 def ChangePassword(request):
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name',"password","newpassword")
-        dict = getpostdict(request)
-        (dict,iflogin)=checklogininfo(request,dict)
-        print("dict",dict)
+        ActionInfo = getpost(request)
+        (ActionInfo,iflogin)=checklogininfo(request,ActionInfo)
+        print("ActionInfo",ActionInfo)
         if iflogin:
-            (result,state) = Note.ChangeUserPassword(dict)
+            (result,state) = Note.ChangeUserPassword(ActionInfo)
             if result:
                 return HttpResponse(json.dumps({'state':state})) 
             else:
@@ -176,29 +191,29 @@ def ChangePassword(request):
     
 def logout(request):
     request.session.pop("name","del name failed")
-    request.session.pop("password","del password failed")
-    #request.session.pop("uid","del uid failed")
+    request.session.pop("permissions","del password failed")
+    request.session.pop("uid","del uid failed")
     if request.is_ajax() and request.method == 'GET':
         return HttpResponse('{"info":"success"}')  
     return render(request, 'note_index.html')
     
-def checklogininfo(request,dict):#检查登录信息，客户端应传回name字段,判断name字段是否一致
-    if "name" in dict:
-        if dict["name"]==request.session.get("name","nu"):#与session用户是否相同#对自己
-            dict["uid"]=request.session["uid"]#找到uid
-            dict["iflogin"]=True
-            return (dict,True)
+def checklogininfo(request,ActionInfo):#检查登录信息，客户端应传回name字段,判断name字段是否一致
+    if "name" in ActionInfo:
+        if ActionInfo["name"]==request.session.get("name","nu"):#与session用户是否相同#对自己
+            ActionInfo["uid"]=request.session["uid"]#找到uid
+            ActionInfo["iflogin"]=True
+            return (ActionInfo,True)
         else:
-            #dict.pop("name","del name failed")
-            dict.pop("uid","del uid failed")
-            dict["iflogin"]=False
-            return (dict,False)
+            #ActionInfo.pop("name","del name failed")
+            ActionInfo.pop("uid","del uid failed")
+            ActionInfo["iflogin"]=False
+            return (ActionInfo,False)
     else:
-        dict["iflogin"]=False
-        return (dict,False)
-def getpostdict(request):#检查登录信息，客户端应传回name字段,判断name字段是否一致
-    dict = {}
+        ActionInfo["iflogin"]=False
+        return (ActionInfo,False)
+def getpost(request):#检查登录信息，客户端应传回name字段,判断name字段是否一致
+    ActionInfo = {}
     for key in request.POST:
         valuelist = request.POST.get(key)
-        dict[key]=valuelist
-    return dict
+        ActionInfo[key]=valuelist
+    return ActionInfo
