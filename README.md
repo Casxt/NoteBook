@@ -46,6 +46,5 @@
 * markdown 已完成
 * 权限系统 计划中
 * 网页交互界面 与系统开发同步<br><br><br>
->>>>>>> origin/master
 有些地方的防恶意注入还没做，还有防xss也不完善。<br>
 示例：note.forer.cn<br>
