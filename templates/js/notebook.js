@@ -684,27 +684,29 @@ function() {
     var path = window.location.pathname
     var title = document.getElementById("text-title").value;
     var essay = document.getElementById("text-artical").value;
+    var cookie_name = unescape(getCookie("name"));
     var postdata = {
         "mode":"SubmitArticle",
         "title": title,
         "essay": essay,
         "password": $("#text-password").val(),
         "tag": $("#text-tag").val(),
-        "author": getCookie("name"),
-        "name": getCookie("name"),
+        //"author": cookie_name,
+        //"name": cookie_name,
         "type":$('#text-type option:selected').val()
     };
+    cookie_name=='null'?true:postdata["author"]=cookie_name;
+    cookie_name=='null'?true:postdata["name"]=cookie_name;
     if ($('#text-password').attr("disabled") == "disabled") {
         delete(postdata["password"]);
     }
     if (titleshow() && articalshow()) {
     document.getElementById("text-submit").className = "btn btn-warning";
     document.getElementById("text-submit").innerHTML = "Submiting...";
-    var name = getCookie("name");
-    if (name == null) {
-        name = "";
+    if (cookie_name == null) {
+        cookie_name = "";
     } else {
-        name = name + "/";
+        cookie_name = cookie_name + "/";
     }
     $.ajax({
         beforeSend: function(request) {
@@ -721,7 +723,7 @@ function() {
                 setCookie((path=="/")?"newessay":"essay", "", 0);
                 document.getElementById("text-submit").className = "btn btn-success";
                 document.getElementById("text-submit").innerHTML = "success";
-                window.location.href = "/" + name + $("#text-title").val() + "/";
+                window.location.href = "/" + cookie_name + $("#text-title").val() + "/";
             } else {
                 document.getElementById("text-submit").className = "btn btn-danger";
                 document.getElementById("text-submit").innerHTML = data.state;

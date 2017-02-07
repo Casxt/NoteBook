@@ -87,3 +87,25 @@ try:
     from note.group import *
 except:
     from group import *
+    
+#######################
+#
+#日志
+#
+#######################
+LoggerName = "Logger"
+LoggerId = "Logger"
+LoggerPass = "Logger"
+LoggerMail = "Logger@forer.cn"
+LoggerDeleteNum = 1
+LogLevel = {
+"CRITICAL":50,
+"ERROR":40,
+"WARNING":30,
+"INFO":20,
+"DEBUG":10,
+"NOTSET":0
+}
+RecordLevel = LogLevel["ERROR"]
+PrintLevel = LogLevel["INFO"]
+PrintDetialLevel = LogLevel["WARNING"]

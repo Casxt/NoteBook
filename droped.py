@@ -1,4 +1,4 @@
-def GetUserInfo (uf):#²éÑ¯ÓÃ»§ĞÅÏ¢#½öÓÃÓÚºóÌ¨´«ÊäÊı¾İ£¡
+def GetUserInfo (uf):#æŸ¥è¯¢ç”¨æˆ·ä¿¡æ¯#ä»…ç”¨äºåå°ä¼ è¾“æ•°æ®ï¼
     #id,uid,name
     SqlUserField = str(USERFIELD).replace("'","`")[1:-1]
     conn = pymysql.connect(**SQLCONFIG)
@@ -15,7 +15,7 @@ def GetUserInfo (uf):#²éÑ¯ÓÃ»§ĞÅÏ¢#½öÓÃÓÚºóÌ¨´«ÊäÊı¾İ£¡
         list.append(dict(map(lambda x,y:[x,y],USERFIELD,value)))
     return list
 
-def UserInfoForArtical (uf):#²éÑ¯´´½¨ÎÄÕÂËùĞèĞÅÏ¢
+def UserInfoForArtical (uf):#æŸ¥è¯¢åˆ›å»ºæ–‡ç« æ‰€éœ€ä¿¡æ¯
     #id,uid,name
     usercolumn=('uid','name','right')
     SqlUserField = str(column).replace("'","`")[1:-1]
@@ -39,10 +39,10 @@ def TestGetArticalInfo():
     list = sqllib.GetArticalInfo (uf)
     return list
 
-def GetArticalInfo (af):#Ä¬ÈÏËùÓĞµÄ¹Ø¼ü´Ê¶¼½øĞĞÄ£ºıËÑË÷#¸ß¼¶ËÑË÷,ÊÖ¶¯ÊäÈëÍ¨Åä·û
+def GetArticalInfo (af):#é»˜è®¤æ‰€æœ‰çš„å…³é”®è¯éƒ½è¿›è¡Œæ¨¡ç³Šæœç´¢#é«˜çº§æœç´¢,æ‰‹åŠ¨è¾“å…¥é€šé…ç¬¦
     SqlARTICALFIELD = str(ARTICALFIELD).replace("'","`")[1:-1]
     ######
-    #Æ´½ÓË÷ËÑÓï¾ä
+    #æ‹¼æ¥ç´¢æœè¯­å¥
     a = ""
     for key in af:
         s ="`"+key+"` LIKE '"+af[key]+"' OR "
@@ -61,4 +61,64 @@ def GetArticalInfo (af):#Ä¬ÈÏËùÓĞµÄ¹Ø¼ü´Ê¶¼½øĞĞÄ£ºıËÑË÷#¸ß¼¶ËÑË÷,ÊÖ¶¯ÊäÈëÍ¨Åä·û
     list=[]
     for value in values:
         list.append(dict(map(lambda x,y:[x,y],ARTICALFIELD,value)))
-    return list    
+    return list   
+
+def FastCreateUser (uf):#å¿«é€Ÿåˆ›å»ºç”¨æˆ·
+    column = ('uid','name','saltpassword','mail','salt','permission','time')
+    Column = str(column).replace("'","`")
+    conn = pymysql.connect(**SQLCONFIG)
+    cursor = conn.cursor()
+    sql =   """insert into """+TABLE["user"]+" "+Column+""" values (%s,%s,%s,%s,%s,0,now())"""
+    cursor.execute(sql,(uf["uid"],uf["name"],uf["saltpassword"],uf["mail"],uf["salt"]))
+    cursor.close()
+    conn.commit()
+    conn.close()
+    return True
+
+
+def GetRemark (uid,title,cursor,*l):#å¿«é€ŸæŸ¥è¯¢remark ç­‰
+    ActionInfo={}
+    usercolumn=['remark','permission']
+    usercolumn.extend(l)
+    SqlUserField = str(usercolumn).replace("'","`")[1:-1]
+    sql =  """select """+SqlUserField+""" from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s"""
+    cursor.execute(sql,(uid,title))
+    value = cursor.fetchone()
+    if value is not None:
+        ActionInfo = dict(map(lambda x,y:[x,y],usercolumn,value))
+    else:
+        raise SqlError("GetRemark","No Such Uid %s Title %s"%(uid,title))
+    return ActionInfo
+
+def FastCreatArtical (ActionInfo):#å¿«é€Ÿåˆ›å»ºæ–‡ç« 
+    Articalcolumn = ('uid','title','permission','essay','pubtime','lastesttime')
+    ArticalColumn = str(Articalcolumn).replace("'","`")
+    conn = pymysql.connect(**SQLCONFIG)
+    cursor = conn.cursor()
+    #åˆ›å»ºæ–‡ç« 
+    ArticleSql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,now(),now())"""
+    cursor.execute(ArticleSql,(ActionInfo.get("uid",PUBLICUSER),ActionInfo["title"],ActionInfo.get("permission",0),ActionInfo["essay"]))
+    UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`+1) where `uid`=%s"""
+    cursor.execute(UserSql,(ActionInfo.get("uid",PUBLICUSER)))
+    cursor.close()
+    conn.commit()
+    conn.close()
+    return True
+    
+def b64(text):
+    if text is None:
+        return None
+    bytesString = text.encode("utf-8")
+    encodestr = base64.b64encode(bytesString)
+    return (encodestr.decode())    
+    
+def CountArticalList (ActionInfo):#è·å–ç”¨æˆ·æ–‡ç« æ•°ç›®#åºŸå¼ƒ
+    conn = pymysql.connect(**SQLCONFIG)
+    cursor = conn.cursor()
+    sql =  """select COUNT(*) from """+TABLE["artical"]+""" WHERE `uid`=%s"""
+    cursor.execute(sql,(ActionInfo["uid"]))
+    values = cursor.fetchall()
+    cursor.close()
+    conn.commit()
+    conn.close()
+    return values

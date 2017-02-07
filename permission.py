@@ -3,6 +3,24 @@ try:
     from note.config import *
 except:
     from config import *
+    
+####################################
+#
+#异常
+#
+####################################  
+class PermissionError(Exception):
+    def __init__(self,FunctionName,Massage, ActionInfo=None):  
+        self.info = ActionInfo
+        self.function = FunctionName
+        self.err = Massage
+        Exception.__init__(self)
+
+####################################
+#
+#鉴权函数
+#
+####################################      
 def ReadArticleList(User,Article):
     if "Self" in User["permissions"]["ReadArticleList"]:
         if User["uid"] == Article["uid"]:
@@ -18,7 +36,7 @@ def ReadArticleList(User,Article):
             return True
     if "All" in User["permissions"]["ReadArticleList"]:
         return True
-    return "Don't Have Permission to Read Other's ArticleList"
+    raise PermissionError("ReadArticleList","User:'%s' Don't Have Permission to Read Other's ArticleList"%User["name"],[User,Article])
     
 def ReadArticle(User,Article):
     if "Self" in User["permissions"]["ReadArticle"]:
@@ -35,11 +53,11 @@ def ReadArticle(User,Article):
             return True
     if "All" in User["permissions"]["ReadArticle"]:
         return True
-    return "Don't Have Permission to Read Other's Article"
+    raise PermissionError("ReadArticle","User:'%s' Don't Have Permission to Read Other's Article"%User["name"],[User,Article])
     
 def CreateArticle(User,Article):
     if User["permissions"]["MaxArticleNum"] <= Article["articalnum"]:
-        return "You Can't Create More Article"
+        raise PermissionError("CreateArticle","You Can't Create More Article",[User,Article]) 
     if "Self" in User["permissions"]["CreateArticle"]:
         if User["uid"] == Article["uid"]:
             return True
@@ -54,8 +72,7 @@ def CreateArticle(User,Article):
             return True
     if "All" in User["permissions"]["CreateArticle"]:
         return True
-    return "Don't Have Permission to Create Other's Article"
-    
+    raise PermissionError("CreateArticle","User:'%s' Don't Have Permission to Create Other's Article"%User["name"],[User,Article]) 
     
 def EditArticle(User,Article):
     if "Self" in User["permissions"]["EditArticle"]:
@@ -72,7 +89,7 @@ def EditArticle(User,Article):
             return True
     if "All" in User["permissions"]["EditArticle"]:
         return True
-    return "Don't Have Permission to Edit Other's Article"
+    raise PermissionError("EditArticle","User:'%s' Don't Have Permission to Edit Other's Article"%User["name"],[User,Article])
     
 def DeleteArticle(User,Article):
     if "Self" in User["permissions"]["DeleteArticle"]:
@@ -89,4 +106,4 @@ def DeleteArticle(User,Article):
             return True
     if "All" in User["permissions"]["DeleteArticle"]:
         return True
-    return "Don't Have Permission to Delete Other's Article"
+    raise PermissionError("DeleteArticle","User:'%s' Don't Have Permission to Delete Other's Article"%User["name"],[User,Article])

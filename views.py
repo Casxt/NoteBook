@@ -22,7 +22,6 @@ def CheckLogin(request):
         else:
             ActionInfo["loginstate"]=0
         ActionInfo["state"]="success"
-        print(ActionInfo)
         return HttpResponse(json.dumps(ActionInfo)) 
         
 @ensure_csrf_cookie
@@ -45,10 +44,8 @@ def submitartical(request):
     
 @ensure_csrf_cookie
 def editartical(request):
-    print("editartical",request.session.keys())
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
-        #print("editartical",ActionInfo)
         if ("name" in ActionInfo) and ActionInfo["name"]!=""  and ActionInfo["name"]!=None:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
@@ -70,7 +67,6 @@ def deleteartical(request):
         if logined:
             if "title" in ActionInfo:
                 state = Note.DeleteArticalByNameTitle(ActionInfo)
-                print('deleteartical',json.dumps({"state":state}))
                 return HttpResponse(json.dumps({"state":state}))
             else:
                 return HttpResponse(json.dumps({"state":"Title Not Found"}))
@@ -83,7 +79,6 @@ def getartical(request,keyword=None):
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if not logined:
             ActionInfo.pop('name',None)
-        print("getartical",ActionInfo)
         artical = Note.GetArtical(ActionInfo)#getartical by
         return HttpResponse(json.dumps(artical))
     #判断spider
@@ -108,14 +103,12 @@ def getarticallist(request):
         if (state is True):
             return HttpResponse(json.dumps({'state':'success','articallist':articallist,'count':count})) 
         else:
-            print(articallist)
             return HttpResponse(json.dumps({'state':articallist})) 
     return render(request, 'note_register.html')
     
 @ensure_csrf_cookie
 def login(request):
     if request.is_ajax() and request.method == 'POST':
-        print('login')
         ActionInfo = getpost(request)
         (Islogin,ActionInfo,state) = Note.CheckUser(ActionInfo)
         if(Islogin):
@@ -132,7 +125,6 @@ def register(request):
     #uf should have ('name','mail','password')
         ActionInfo = getpost(request)
         (ActionInfo,state) = Note.CreateUser(ActionInfo)
-        print(str(ActionInfo),state)
         return HttpResponse(json.dumps({'state':ActionInfo})) 
     return render(request, 'note_register.html')
     
@@ -151,10 +143,8 @@ def searchartical(request):
             return HttpResponse(json.dumps({'state':'failed'}))
         (articallist,state) = Note.SearchArticalList(ActionInfo)#articallist是数组
         if (state is True):
-            #print(json.dumps({'state':'success','articallist':articallist}))
             return HttpResponse(json.dumps({'state':'success','keyword':ActionInfo["keyword"],'articallist':articallist})) 
         else:
-            print(json.dumps(articallist))
             return HttpResponse(json.dumps(articallist)) 
     return render(request, 'note_index.html')
     
@@ -167,7 +157,6 @@ def ReSetPassword(request):
         if result:
             return HttpResponse(json.dumps({'state':"success"})) 
         else:
-            print(state)
             return HttpResponse(json.dumps({'state':'failed'})) 
     return render(request, 'note_index.html')
 
@@ -177,13 +166,11 @@ def ChangePassword(request):
     #uf should have ('name',"password","newpassword")
         ActionInfo = getpost(request)
         (ActionInfo,iflogin)=checklogininfo(request,ActionInfo)
-        print("ActionInfo",ActionInfo)
         if iflogin:
             (result,state) = Note.ChangeUserPassword(ActionInfo)
             if result:
                 return HttpResponse(json.dumps({'state':state})) 
             else:
-                print(state)
                 return HttpResponse(json.dumps({'state':'failed'})) 
         else:
             return render(request, 'note_index.html')
@@ -198,8 +185,8 @@ def logout(request):
     return render(request, 'note_index.html')
     
 def checklogininfo(request,ActionInfo):#检查登录信息，客户端应传回name字段,判断name字段是否一致
-    if "name" in ActionInfo:
-        if ActionInfo["name"]==request.session.get("name","nu"):#与session用户是否相同#对自己
+    if "name" in ActionInfo and "name" in request.session :
+        if ActionInfo["name"]==request.session["name"]:#与session用户是否相同#对自己
             ActionInfo["uid"]=request.session["uid"]#找到uid
             ActionInfo["iflogin"]=True
             return (ActionInfo,True)
