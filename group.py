@@ -5,7 +5,7 @@ Inf = math.inf
 #SameGroup
 #LowerGroup
 #All
-USER_PERMISSIONS=["Weight","DispitePass","ReadArticle","ReadArticleList","CreateArticle","DeleteArticle","EditArticle","SearchArticle","MaxArticleNum"]
+USER_PERMISSIONS=("Weight","DispitePass","ReadArticle","ReadArticleList","CreateArticle","DeleteArticle","EditArticle","SearchArticle","MaxArticleNum")
 ####################################
 #
 #默认用户组
@@ -13,12 +13,12 @@ USER_PERMISSIONS=["Weight","DispitePass","ReadArticle","ReadArticleList","Create
 #################################### 
 DEFAULTGROUP={
 "Weight":10,
-"ReadArticle":["Self","LowerGroup"],
-"ReadArticleList":["Self","PublicUser"],
-"CreateArticle":["Self"],
-"DeleteArticle":["Self"],
-"EditArticle":["Self"],
-"SearchArticle":["Self"],
+"ReadArticle":("Self","LowerGroup"),
+"ReadArticleList":("Self","PublicUser"),
+"CreateArticle":("Self"),
+"DeleteArticle":("Self"),
+"EditArticle":("Self"),
+"SearchArticle":("Self"),
 "MaxArticleNum":100
 }
 ####################################
@@ -29,7 +29,7 @@ DEFAULTGROUP={
 VIPGROUP = dict(DEFAULTGROUP)
 VIPGROUP.update({
 "Weight":10,
-"ReadArticle":["LowerGroup"],
+"ReadArticle":("LowerGroup"),
 "MaxArticleNum":1000
 })
 ####################################
@@ -40,12 +40,12 @@ VIPGROUP.update({
 ADMINGROUP = dict(VIPGROUP)
 ADMINGROUP.update({
 "Weight":100,
-"ReadArticle":["LowerGroup"],
-"ReadArticleList":["LowerGroup"],
-"CreateArticle":["LowerGroup"],
-"DeleteArticle":["LowerGroup"],
-"EditArticle":["LowerGroup"],
-"SearchArticle":["LowerGroup"],
+"ReadArticle":("LowerGroup"),
+"ReadArticleList":("LowerGroup"),
+"CreateArticle":("LowerGroup"),
+"DeleteArticle":("LowerGroup"),
+"EditArticle":("LowerGroup"),
+"SearchArticle":("LowerGroup"),
 "MaxArticleNum":9999999,
 })
 ####################################
@@ -56,13 +56,13 @@ ADMINGROUP.update({
 MANAGEGROUP = dict(VIPGROUP)
 MANAGEGROUP.update({
 "Weight":Inf,
-"DispitePass":["All"],
-"ReadArticle":["All"],
-"ReadArticleList":["All"],
-"CreateArticle":["All"],
-"DeleteArticle":["All"],
-"EditArticle":["All"],
-"SearchArticle":["All"],
+"DispitePass":("All"),
+"ReadArticle":("All"),
+"ReadArticleList":("All"),
+"CreateArticle":("All"),
+"DeleteArticle":("All"),
+"EditArticle":("All"),
+"SearchArticle":("All"),
 "MaxArticleNum":Inf,
 })
 

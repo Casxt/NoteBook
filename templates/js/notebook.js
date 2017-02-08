@@ -279,7 +279,8 @@ function GetArticleList() { //获取文章列表
         postdata = {
             'mode':'GetArticleList',
             'name': cookie_name,
-            "page":page
+            "page":page,
+            'order':'DESC'
         }
         //name = ""
     } else {
@@ -287,7 +288,8 @@ function GetArticleList() { //获取文章列表
             'mode':'GetArticleList',
             'name': cookie_name,
             'author':a[4],
-            "page":page
+            "page":page,
+            'order':'DESC'
         }
     }
     $.ajax({

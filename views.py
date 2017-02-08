@@ -9,10 +9,12 @@ import note.Note as Note
     
 @ensure_csrf_cookie
 def index(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
 def CheckLogin(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo={}
         ActionInfo = getpost(request)
@@ -26,6 +28,7 @@ def CheckLogin(request):
         
 @ensure_csrf_cookie
 def submitartical(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         if ("name" in ActionInfo) and ActionInfo["name"]!="" and ActionInfo["name"]!=None:
@@ -44,6 +47,7 @@ def submitartical(request):
     
 @ensure_csrf_cookie
 def editartical(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         if ("name" in ActionInfo) and ActionInfo["name"]!=""  and ActionInfo["name"]!=None:
@@ -61,25 +65,24 @@ def editartical(request):
     
 @ensure_csrf_cookie
 def deleteartical(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST' and "uid" in request.session:
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)#
         if logined:
-            if "title" in ActionInfo:
-                state = Note.DeleteArticalByNameTitle(ActionInfo)
-                return HttpResponse(json.dumps({"state":state}))
-            else:
-                return HttpResponse(json.dumps({"state":"Title Not Found"}))
+            state = Note.DeleteArticalByNameTitle(ActionInfo)
+            return HttpResponse(json.dumps(state))
         return HttpResponse(json.dumps({"state":"Name err"}))
         
 @ensure_csrf_cookie
 def getartical(request,keyword=None):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if not logined:
             ActionInfo.pop('name',None)
-        artical = Note.GetArtical(ActionInfo)#getartical by
+        artical = Note.GetArtical(ActionInfo)
         return HttpResponse(json.dumps(artical))
     #判断spider
     elif "spider" in request.META.get('HTTP_USER_AGENT', "").lower():
@@ -89,6 +92,7 @@ def getartical(request,keyword=None):
     
 @ensure_csrf_cookie
 def getarticallist(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
         ActionInfo = getpost(request)
@@ -99,84 +103,72 @@ def getarticallist(request):
                 ActionInfo.pop("name",None)
                 logout(request)
                 
-        (articallist,count,state) = Note.GetArticalList(ActionInfo)#articallist是数组        
-        if (state is True):
-            return HttpResponse(json.dumps({'state':'success','articallist':articallist,'count':count})) 
-        else:
-            return HttpResponse(json.dumps({'state':articallist})) 
+        res = Note.GetArticalList(ActionInfo)#articallist是数组        
+        return HttpResponse(json.dumps(res))  
     return render(request, 'note_register.html')
     
 @ensure_csrf_cookie
 def login(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
-        (Islogin,ActionInfo,state) = Note.CheckUser(ActionInfo)
-        if(Islogin):
-            request.session["name"] = ActionInfo["name"]
-            request.session["uid"] = ActionInfo["uid"]
-            request.session["permissions"] = ActionInfo["permissions"]
-            ActionInfo.pop("uid")#uid 不传回客户端
-        return HttpResponse(json.dumps(ActionInfo)) 
+        res = Note.CheckUser(ActionInfo)
+        if(res["state"]=="success"):
+            request.session["name"] = res["name"]
+            request.session["uid"] = res["uid"]
+            request.session["permissions"] = res["permissions"]
+            res.pop("uid")#uid 不传回客户端
+        return HttpResponse(json.dumps(res)) 
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
 def register(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name','mail','password')
         ActionInfo = getpost(request)
-        (ActionInfo,state) = Note.CreateUser(ActionInfo)
-        return HttpResponse(json.dumps({'state':ActionInfo})) 
+        state = Note.CreateUser(ActionInfo)
+        return HttpResponse(json.dumps(state)) 
     return render(request, 'note_register.html')
     
 @ensure_csrf_cookie
 def searchartical(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
         ActionInfo = getpost(request)
-        if "uid" not in request.session :#未登录
-            return HttpResponse(json.dumps({'state':'failed'}))
-        elif ("name" not in ActionInfo) or (ActionInfo["name"]=="") or (ActionInfo["name"]==None):
-            ActionInfo={}
-        elif request.session.get("name",None) == ActionInfo["name"]:
-            ActionInfo["uid"]=request.session["uid"]
-        else:#传入了name但是和已登录的name不同
-            return HttpResponse(json.dumps({'state':'failed'}))
-        (articallist,state) = Note.SearchArticalList(ActionInfo)#articallist是数组
-        if (state is True):
+        (ActionInfo,logined) = checklogininfo(request,ActionInfo)
+        if logined:
+            (articallist,state) = Note.SearchArticalList(ActionInfo)#articallist是数组
             return HttpResponse(json.dumps({'state':'success','keyword':ActionInfo["keyword"],'articallist':articallist})) 
-        else:
-            return HttpResponse(json.dumps(articallist)) 
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
 def ReSetPassword(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name',"mail")
         ActionInfo = getpost(request)
-        (result,state) = Note.ReCreateUserPassword(ActionInfo)
-        if result:
-            return HttpResponse(json.dumps({'state':"success"})) 
-        else:
-            return HttpResponse(json.dumps({'state':'failed'})) 
+        state = Note.ReCreateUserPassword(ActionInfo)
+        return HttpResponse(json.dumps(state)) 
     return render(request, 'note_index.html')
 
 @ensure_csrf_cookie
 def ChangePassword(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name',"password","newpassword")
         ActionInfo = getpost(request)
         (ActionInfo,iflogin)=checklogininfo(request,ActionInfo)
         if iflogin:
-            (result,state) = Note.ChangeUserPassword(ActionInfo)
-            if result:
-                return HttpResponse(json.dumps({'state':state})) 
-            else:
-                return HttpResponse(json.dumps({'state':'failed'})) 
+            state = Note.ChangeUserPassword(ActionInfo)
+            return HttpResponse(json.dumps(state)) 
         else:
             return render(request, 'note_index.html')
     return render(request, 'note_index.html')
     
 def logout(request):
+    print(request.META['HTTP_X_FORWARDED_FOR'])
     request.session.pop("name","del name failed")
     request.session.pop("permissions","del password failed")
     request.session.pop("uid","del uid failed")

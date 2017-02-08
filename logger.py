@@ -30,7 +30,10 @@ def Record(Level,Summary,Detial,Addition=0):
     Add = (" "+str(Addition)) if Addition else ""
     Title = "[LOG][%s%s][%s]%s"%(Level,Add,Time,Summary)
     if LogLevel[Level] >= RecordLevel:
-        Essay = json.dumps(Detial)
+        try:
+            Essay = json.dumps(Detial)
+        except TypeError as e:
+            Essay = str(Detial)
         ArticleInfo={
         "title":Title,
         "essay":Essay,
@@ -42,7 +45,6 @@ def Record(Level,Summary,Detial,Addition=0):
         #考虑专用函数
         try:
             res = sqllib.CreatArtical(ArticleInfo)
-            return (res)
         except PermissionError as e:
             if "You Can't Create More Article" in e.err:
                 ClearLog(LoggerDeleteNum)

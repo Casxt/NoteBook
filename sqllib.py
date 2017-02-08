@@ -298,7 +298,7 @@ def GetArtical (ActionInfo):#直接获取文章信息
     #拼接索搜语句
     ######
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
-    ActionInfo.update(GetName(ActionInfo['uid'],cursor))
+    ActionInfo.update(GetUid(ActionInfo['name'],cursor))
     #pprint(ActionInfo)
     
     try:
@@ -329,7 +329,7 @@ def GetArticalList (ActionInfo):#获取文章列表
     #拼接索搜语句
     ######
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
-    ActionInfo.update(GetName(ActionInfo['uid'],cursor))
+    ActionInfo.update(GetUid(ActionInfo['name'],cursor))
     #pprint(ActionInfo)
     Per = Permission.ReadArticleList(ActionInfo,ActionInfo["authorInfo"])
     if Per is True:
