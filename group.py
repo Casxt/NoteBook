@@ -6,6 +6,7 @@ Inf = math.inf
 #LowerGroup
 #All
 USER_PERMISSIONS=("Weight","DispitePass","ReadArticle","ReadArticleList","CreateArticle","DeleteArticle","EditArticle","SearchArticle","MaxArticleNum")
+DEFAULT_GROUP = "Default"
 ####################################
 #
 #默认用户组
@@ -65,6 +66,22 @@ MANAGEGROUP.update({
 "SearchArticle":("All"),
 "MaxArticleNum":Inf,
 })
-
-
-USER_GROUP={"Default":DEFAULTGROUP,"Vip":VIPGROUP,"Admin":ADMINGROUP,"Manage":MANAGEGROUP}
+####################################
+#
+#日志用户组(ADMINGROUP)
+#
+#################################### 
+LOGGERGROUP = dict(DEFAULTGROUP)
+LOGGERGROUP.update({
+"Weight":ADMINGROUP["Weight"],
+"DispitePass":("Self"),
+"ReadArticle":("Self"),
+"ReadArticleList":("Self"),
+"CreateArticle":("Self"),
+"DeleteArticle":("Self"),
+"EditArticle":("Self"),
+"SearchArticle":("Self"),
+"MaxArticleNum":50,
+})
+#Keep this line on the buttom
+USER_GROUP={"Default":DEFAULTGROUP,"Vip":VIPGROUP,"Admin":ADMINGROUP,"Manage":MANAGEGROUP,"Logger":LOGGERGROUP}

@@ -30,8 +30,8 @@ class SqlError(Exception):
 #
 ####################################
 def MixPermission(Group, Addition):
-    if Group is None:    
-        Group = "Default"
+    if Group is None or Group not in USER_GROUP:    
+        Group = DEFAULT_GROUP
     per  = dict(USER_GROUP[Group])
     if Addition is None:
         return per
@@ -58,7 +58,10 @@ def GetUserPermission (cursor,uid):
 def GetArticleInfo (cursor,title,uid):
     ArticleColumn = ('id','uid','blgroup','permission')
     SqlArticleField = str(ArticleColumn).replace("'","`")[1:-1]
-    Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `title`=%s AND `uid`=%s"""
+    if not title.isdigit():
+        Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `title`=%s AND `uid`=%s"""
+    else:
+        Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `id`=%s AND `uid`=%s"""
     cursor.execute(Sql,(title,uid))
     value = cursor.fetchone()
     if value is not None:
@@ -96,12 +99,12 @@ def SqlClose(conn,cursor):
 #
 ####################################      
 def CreateUser (uf):#创建用户
-    column = ('uid','name','mail','salt','saltpassword','lastfailedtime','time')
+    column = ('uid','name','mail','salt','saltpassword','group','lastfailedtime','time')
     Column = str(column).replace("'","`")
     (conn,cursor) = SqlOpen()
     try:
         sql =   """insert into """+TABLE["user"]+""" """+Column+""" values (%s,%s,%s,%s,%s,now(),now())"""
-        cursor.execute(sql,(uf["uid"],uf["name"],uf["mail"],uf["salt"],uf["saltpassword"]))
+        cursor.execute(sql,(uf["uid"],uf["name"],uf["mail"],uf["salt"],uf["saltpassword"],uf["group"]))
     except pymysql.err.IntegrityError as e:
         err = str(e)
         if "Duplicate entry" in err:
@@ -302,7 +305,10 @@ def GetArtical (ActionInfo):#直接获取文章信息
     #pprint(ActionInfo)
     
     try:
-        ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
+        if "title" in ActionInfo:
+            ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
+        else:
+            ArticleInfo = GetArticleInfo(cursor,ActionInfo['id'],ActionInfo["authorInfo"]["uid"])
     except SqlError as e:
         SqlClose(conn,cursor)
         raise SqlError("GetArtical","No Such Article '%s' Belong to '%s' !!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
@@ -311,9 +317,14 @@ def GetArtical (ActionInfo):#直接获取文章信息
         Per = Permission.EditArticle(ActionInfo,ArticleInfo)
     else:
         Per = Permission.ReadArticle(ActionInfo,ArticleInfo)
+        
     if Per is True:
-        sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND  (`id`=%s OR `title`=%s)"""
-        cursor.execute(sql,(ActionInfo["author"],ActionInfo.get("id",None),ActionInfo.get("title",None)))
+        if "title" in ActionInfo:
+            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND `title`=%s"""
+            cursor.execute(sql,(ActionInfo["author"],ActionInfo["title"]))
+        else:
+            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND `id`=%s"""
+            cursor.execute(sql,(ActionInfo["author"],ActionInfo["id"]))
         value = cursor.fetchone()
         SqlClose(conn,cursor)
         #若文章不存在，则在GetArticleInfo时已经开始报错

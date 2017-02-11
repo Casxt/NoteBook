@@ -53,10 +53,11 @@ def editartical(request):
         if ("name" in ActionInfo) and ActionInfo["name"]!=""  and ActionInfo["name"]!=None:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
-                info = Note.EditArtical(ActionInfo)
-                return HttpResponse(json.dumps(info))
+                pass
             else:
-                return HttpResponse(json.dumps({"state":"Need Login"}))
+                del ActionInfo['name']
+            info = Note.EditArtical(ActionInfo)
+            return HttpResponse(json.dumps(info))
         else:
             ActionInfo.pop('name',None)
             info = Note.EditArtical(ActionInfo)
@@ -139,8 +140,8 @@ def searchartical(request):
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if logined:
-            (articallist,state) = Note.SearchArticalList(ActionInfo)#articallist是数组
-            return HttpResponse(json.dumps({'state':'success','keyword':ActionInfo["keyword"],'articallist':articallist})) 
+            state = Note.SearchArticalList(ActionInfo)#articallist是数组
+            return HttpResponse(json.dumps(state)) 
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
@@ -190,6 +191,7 @@ def checklogininfo(request,ActionInfo):#检查登录信息，客户端应传回n
     else:
         ActionInfo["iflogin"]=False
         return (ActionInfo,False)
+        
 def getpost(request):#检查登录信息，客户端应传回name字段,判断name字段是否一致
     ActionInfo = {}
     for key in request.POST:

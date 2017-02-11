@@ -1,54 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Note</title>
-        
-        <!-- Bootstrap -->
-        <link href="/css/bootstrap.min.css" rel="stylesheet">
-        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-        <!--[if lt IE 9]>
-          <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-          <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
-    </head>
-    <body style="padding-top: 70px;">
-    <script src="js/bootstrap.min.js"></script>
-    <!--导航栏 -->
-    <nav class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <!-- -->   <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">Note Book</a></div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li>
-              <a href="/list">公共文章</a>
-            </li>
-            <div class="navbar-form navbar-right">
-              <button id="open-login" type="button" class="btn btn-default" data-toggle="modal" data-target="#Modal-Login">登录</button></div>
-          </ul>
-          <div class="navbar-form navbar-right" onsubmit="return search(this);">
-            <div class="form-group">
-              <span id="search-warning" class="label label-warning" ></span>
-              <input id="header-search" type="text" class="form-control" placeholder="Search" style="display:none;overflow: visible;"></div>
-              <button id="header-search-buttom" type="submit" class="btn btn-default" style="display:none;overflow: visible;">Search</button>
-          </div>
-        </div>
-        <!--/.nav-collapse --></div>
-    </nav>
-    <!--导航栏 -->
-        <!--登录 -->
-<div  style="width: 30em;" class="container">
 <div class="form-horizontal">
+ <div class="modal-header"> 
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span></button> 
+  <h4 class="modal-title">注册</h4> 
+ </div> 
+ <div class="modal-body"> 
   <div class="form-group">
     <label class="col-sm-3 control-label">Name</label>
     <div class="col-sm-8">
@@ -77,20 +32,8 @@
     <span id="register-confirm-password-warning" class="label label-warning"></span>
     </div>
   </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button id="register-Signup" type="submit" class="btn btn-default">Sign up</button>
-    </div>
-  </div>
-  </div>
+  </div> 
+  <div class="modal-footer"> 
+      <button id="register-Signup" type="submit" class="btn btn-default">注册</button>
 </div>
-        <!--登录 -->
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/js-sha256 v0.3.0.js"></script>
-    <script src="/js/notebook.js"></script>
-    </body>
-</html>
+</div>

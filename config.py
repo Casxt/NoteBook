@@ -9,46 +9,13 @@ TABLE= {'user':'Note_user',
         'artical':'Note_artical',
         'search':'Note_search'
         }
-#######################
-#
-#邮件设置
-#
-#######################
-
-#邮件发送地址
-MAIL_FROM_ADDR = ""
-#smtp服务器密码
-MAIL_PASSWORD = ''
-#收件地址
-MAIL_TO_ADDR = ''
-#smtp服务器
-MAIL_SMTP_SERVER = 'smtp.qq.com'
-#邮件
-#测试
-MAIL_TITLE = '来自SMTP的问候……'
-MAIL_ARTICAL = 'hello, send by Python...'
-#注册邮件
-MAIL_TITLE_SIGNIN = """NoteBook新用户验证"""
-MAIL_ARTICAL_SIGNIN = """你注册了新的NoteBook账号，请点击以下网址完成注册："""
-#重置密码邮件
-MAIL_TITLE_RSPASSWORD = """NoteBook重置密码"""
-MAIL_ARTICAL_RSPASSWORD = """您申请了重置密码，系统为您生成了新的密码：%s"""
-#修改密码邮件
-MAIL_TITLE_CGPASSWORD = """NoteBook修改密码"""
-MAIL_ARTICAL_CGPASSWORD = """您账户的密码已经改变，若非本人操作请尽快重置密码"""
-
-#######################
-#
-#杂项设置
-#
-#######################
 BASE64SEARCH=False#中文分词有难度，无限期延期
 PUBLICUSER='admin'
 USERFIELD=('id','uid','name','mail','salt','saltpassword','permission','articalnum','lgnfailedtimes','group','remark','time')
 ARTICALFIELD=('id','uid','title','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
 SEARCHFIELD=('id','uid','b64title','b64essay','b64tag','permission','blgroup','b64remark','pubtime','lastesttime')
 #文章类型列表
-ARTICALTYPELIST=['html/text','html','text','json','image','markdown',"code"]
+ARTICALTYPELIST=('html/text','html','text','json','image','markdown',"code")
 #默认文章类型
 DEFAULTARTICALTYPE=ARTICALTYPELIST[0]
 #每页显示条目
@@ -74,10 +41,43 @@ MIN_TITLE_LENGTH = 2
 #文章长度
 MAX_ESSAY_LENGTH = 5000
 MIN_ESSAY_LENGTH = 2
+#api模式
+MODE_LIST=("edit","CheckLoginState","GetArticle",
+"GetArticleList","SearchArticle","SubmitEditedArticle",
+"SubmitArticle","DeleteArticle","Login","Logout","Register",
+"ChangePassword","ResetPassword","CheckLoginState",)
+#######################
+#
+#邮件设置
+#
+#######################
+
+#邮件发送地址
+MAIL_FROM_ADDR = "maple@forer.cn"
+#smtp服务器密码
+MAIL_PASSWORD = ''
+#收件地址
+MAIL_TO_ADDR = '774714620@qq.com'
+#smtp服务器
+MAIL_SMTP_SERVER = 'smtp.qq.com'
+#邮件
+#测试
+MAIL_TITLE = '来自SMTP的问候……'
+MAIL_ARTICAL = 'hello, send by Python...'
+#注册邮件
+MAIL_TITLE_SIGNIN = """NoteBook新用户验证"""
+MAIL_ARTICAL_SIGNIN = """你注册了新的NoteBook账号，请点击以下网址完成注册："""
+#重置密码邮件
+MAIL_TITLE_RSPASSWORD = """NoteBook重置密码"""
+MAIL_ARTICAL_RSPASSWORD = """您申请了重置密码，系统为您生成了新的密码：%s"""
+#修改密码邮件
+MAIL_TITLE_CGPASSWORD = """NoteBook修改密码"""
+MAIL_ARTICAL_CGPASSWORD = """您账户的密码已经改变，若非本人操作请尽快重置密码"""
+
 
 #######################
 #
-#错误返回(废弃)
+#错误返回
 #
 #######################
 #权限不足

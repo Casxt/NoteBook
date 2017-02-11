@@ -85,7 +85,7 @@ def CheckUser(uf):#检查用户能否登录
 def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
 
     try:
-        ActionInfo = CheckParamet(["name","author","title"],ActionInfo)
+        ActionInfo = CheckParamet(["name","author","title","mode"],ActionInfo)
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"Paramet Error","essay":e.err,"state":"Failed"})
@@ -97,7 +97,7 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
     ActionInfo["id"] = 0
     if ActionInfo["title"].isdigit():
         ActionInfo["id"] = ActionInfo["title"]
-    ActionInfo["mode"] = ActionInfo.get("mode",None)
+        del ActionInfo["title"]
 
     try:
         artical = sqllib.GetArtical(ActionInfo)
@@ -112,7 +112,8 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
         return ({"title":"GetArtical UnkonwErr","essay":"GetArtical UnkonwErr","state":"Failed"})
 
     if artical["saltpassword"] is not None:#如果有密码
-        if ActionInfo.get("mode",None)=="edit":#如果有传入密码
+        artical["havepassword"]=True
+        if ActionInfo["mode"]=="edit":#如果有传入密码
             artical["state"]="success"
         elif ActionInfo.get("password",None) is None:#如果没有传入密码
             return {"state":"Need Password","title":"Permission Denied","essay":"Need Password"}
@@ -121,6 +122,7 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
         else:#传入密码错误
             return {"state":"Failed","title":"Get Title Error","essay":"Get Essay Error"}
     else:
+        artical["havepassword"]=False
         artical["state"]="success"
 
     del artical["saltpassword"]
@@ -226,10 +228,10 @@ def GetArticalList(ActionInfo):
         result = res["result"]
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
-        return {'state':'false','articallist':e.err,'count':0}
+        return {'state':e.err}
     except Exception as e:
         logger.Record("ERROR",str(e),{"Function":"GetArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return {'state':'GetArticalList','articallist':e.err,'count':0}
+        return {'state':'GetArticalList UnKnowErr'}
     for artical in result:
         artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
         artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
@@ -243,10 +245,7 @@ def GetArticalList(ActionInfo):
 
 def SpiderResponser(url):
     s = r'^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$'
-    try:
-        a = re.match(s, url).groups()#1,3
-    except:
-        print(traceback.format_exc())
+    a = re.match(s, url).groups()#1,3
     if (a[1] != "list"):
         return GetSpiderArticle(a[1],a[3])
     elif (a[1] == "list"):
@@ -280,7 +279,7 @@ def GetSpiderArticleList(list,user):
 def SearchArticalList(ActionInfo):
 
     try:
-        ActionInfo = CheckParamet(["uid","name","author"],ActionInfo,["page","eachpage","order"])
+        ActionInfo = CheckParamet(["uid","name","author","keyword"],ActionInfo,["page","eachpage","order"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -308,7 +307,7 @@ def CreateUser(ActionInfo):#生成用户，生成uid，生成盐
     import uuid
     
     try:
-        ActionInfo = CheckParamet(["name","mail","password"],ActionInfo)
+        ActionInfo = CheckParamet(["name","mail","password","group"],ActionInfo)
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({'state':e.err})
@@ -358,10 +357,10 @@ def ChangeUserPassword(ActionInfo):#更改密码，要求登录
         
     userinfo = CheckUser(ActionInfo)
     if userinfo["state"] == "success":
-        info = sqllib.GetUserInfo (ActionInfo)
-        info["password"] = ActionInfo["newpassword"]
-        info = CreateSaltAndPassword(info)
         try:
+            info = sqllib.GetUserInfo (ActionInfo)
+            info["password"] = ActionInfo["newpassword"]
+            info = CreateSaltAndPassword(info)
             mail.Send(info["mail"],MAIL_TITLE_CGPASSWORD,MAIL_ARTICAL_CGPASSWORD)
             sqllib.ResetPassword (info)
             return {'state':"success"}
@@ -385,8 +384,15 @@ def ReCreateUserPassword(ActionInfo):#重置密码用户名
         logger.Record("ERROR",str(e),{"Function":"ChangeUserPassword","Info":ActionInfo,"Detial":traceback.format_exc()})
         return ({'state':"ChangeUserPassword UnKnowErr"})
 
-
-    info = sqllib.GetUserInfo (ActionInfo)
+    try:
+        info = sqllib.GetUserInfo(ActionInfo)
+    except (SqlError,PermissionError,MailError) as e:
+        logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
+        return {'state':e.err}
+    except Exception as e:
+        logger.Record("ERROR",str(e),{"Function":"ReCreateUserPassword","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({'state':"ReCreateUserPassword UnKnowErr"})
+        
     if ActionInfo["mail"] == info["mail"]:
         newpassword = str(uuid.uuid3(uuid.uuid1(), ActionInfo['mail']))
         info["password"] = newpassword
@@ -398,6 +404,9 @@ def ReCreateUserPassword(ActionInfo):#重置密码用户名
             return {'state':"success"}
         except (SqlError,PermissionError,MailError) as e:
             return {'state':e.err}
+        except Exception as e:
+            logger.Record("ERROR",str(e),{"Function":"ReCreateUserPassword","Info":ActionInfo,"Detial":traceback.format_exc()})
+            return ({'state':"ReCreateUserPassword UnKnowErr"})
     else:
         return {'state':"Mail Not Match"}
 
@@ -439,9 +448,15 @@ def CheckUserMail(Mail):#检查邮箱是否合法
     else:
         return False
 
+def CheckUserGroup(Group):#检查用户组
+    if Group in USER_GROUP:
+        return True
+    else:
+        return False
+        
 def CheckTitle(Title):
     ForBidden = r'[\\#\$\?<>]'
-    Allow = r'[\S\S]{%s,%s}'%(MIN_TITLE_LENGTH,MAX_TITLE_LENGTH)
+    Allow = r'^\S[\S\s]{%s,%s}$'%(MIN_TITLE_LENGTH-1,MAX_TITLE_LENGTH-1)
     if re.match(ForBidden, Title) or not re.match(Allow, Title):
         return CheckArticleId(Title)
     else:
@@ -451,8 +466,8 @@ def CheckArticleId(Id):
         return Id.isdigit()
         
 def CheckEssay(Essay):
-    ForBidden = r'[(<script)(script>)(<iframe)(iframe>)(<link)(<style)(style>)(<frameset)(frameset>)]'
-    Allow = r'[\S\S]{%s,%s}'%(MIN_ESSAY_LENGTH,MAX_ESSAY_LENGTH)
+    ForBidden = r'((<script)|(script>)|(<iframe)|(iframe>)|(<link)|(<style)|(style>)|(<frameset)|(frameset>))'
+    Allow = r'^[\S\s]{%s,%s}$'%(MIN_ESSAY_LENGTH,MAX_ESSAY_LENGTH)
     if re.match(ForBidden, Essay) or not re.match(Allow, Essay):
         return False
     else:
@@ -488,7 +503,13 @@ def CheckArticleListEachPage(EachPage):
         return True
     else:
         return False
-       
+
+def CheckMode(Mode):
+    if Mode in MODE_LIST:
+        return True
+    else:
+        return False    
+        
 def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
     ParametKeySet = set(ParametKeyList+OptionalParametKeyList)
     OptionalParametKeySet = set(OptionalParametKeyList)
@@ -496,6 +517,7 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
         "uid":CheckUserId,
         "name":CheckUserName,
         "author":CheckUserName,
+        "group":CheckUserGroup,
         "title":CheckTitle,
         "rawtitle":CheckTitle,
         "essay":CheckEssay,
@@ -507,7 +529,8 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
         "page":CheckArticleListPage,
         "eachpage":CheckArticleListEachPage,
         "order":CheckArticleListOrder,
-        "id":CheckArticleId
+        "id":CheckArticleId,
+        "mode":CheckMode
     }
     ResInfo = {}
     if "name" in ParametKeySet:#必须有name字段，登录验证由session处理
@@ -519,8 +542,8 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
                 ResInfo["name"] = ActionInfo["name"].lower()
                 ParametKeySet.remove("name")
             else:
-                if "name" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'name':'%s'"%(ActionInfo["name"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                #if "name" not in OptionalParametKeySet:
+                raise NoteError("CheckParamet","IllLegal Paramet 'name':'%s'"%(ActionInfo["name"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
     
     if "author" in ParametKeySet:
         if  "author" not in ActionInfo:
@@ -530,8 +553,19 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
                 ResInfo["author"] = ActionInfo["author"].lower()
                 ParametKeySet.remove("author")
             else:
-                if "author" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'author':'%s'"%(ActionInfo["author"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                #if "author" not in OptionalParametKeySet:
+                raise NoteError("CheckParamet","IllLegal Paramet 'author':'%s'"%(ActionInfo["author"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+    
+    if "group" in ParametKeySet:
+        if  "group" not in ActionInfo:
+            ActionInfo["group"]=DEFAULT_GROUP
+        else:
+            if CheckFunction["group"](ActionInfo["group"]) is True:
+                ResInfo["group"] = ActionInfo["group"]
+                ParametKeySet.remove("group")
+            else:
+                if "group" not in OptionalParametKeySet:
+                    raise NoteError("CheckParamet","IllLegal Paramet 'group':'%s'"%(ActionInfo["group"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
     
     if "mail" in ParametKeySet:
         if  "mail" not in ActionInfo:
@@ -593,15 +627,15 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
             if CheckFunction[Key](ActionInfo[Key]) is True:
                 ResInfo[Key] = ActionInfo[Key]
             else:
-                raise NoteError("CheckParamet","IllLegal Paramet ‘%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         except KeyError as e:
             if Key not in OptionalParametKeySet:
-                raise NoteError("CheckParamet","Missing Paramet %s"%(str(e)),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
-        except Exception as e:
-            print(traceback.format_exc())
-            Info = {"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet}
-            logger.Record("ERROR",str(e),{"Function":"CheckParamet","Info":Info,"Detial":traceback.format_exc()})
-            raise NoteError("CheckParamet","CheckParamet UnknowErr",Info)
+                raise NoteError("CheckParamet","Missing Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        # except Exception as e:
+            # print(traceback.format_exc())
+            # Info = {"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet}
+            # logger.Record("ERROR",str(e),{"Function":"CheckParamet","Info":Info,"Detial":traceback.format_exc()})
+            # raise NoteError("CheckParamet","CheckParamet UnknowErr",Info)
             
     return (ResInfo)
         

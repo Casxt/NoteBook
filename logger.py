@@ -18,6 +18,7 @@ except Exception as e:
     # "uid":LoggerId,
     # "name":LoggerName,
     # "mail":LoggerMail,
+    # "group":"Logger",
     # "password":LoggerPass
     # }
     # (massage,state)=Note.CreateUser(LoggerInfo)
@@ -29,19 +30,20 @@ def Record(Level,Summary,Detial,Addition=0):
     Time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     Add = (" "+str(Addition)) if Addition else ""
     Title = "[LOG][%s%s][%s]%s"%(Level,Add,Time,Summary)
-    if LogLevel[Level] >= RecordLevel:
-        try:
-            Essay = json.dumps(Detial)
-        except TypeError as e:
-            Essay = str(Detial)
-        ArticleInfo={
+    ArticleInfo={
         "title":Title,
-        "essay":Essay,
         "name":LoggerName,
         "author":LoggerName,
         "uid":LoggerId,
-        "type":"json"
         }
+    if LogLevel[Level] >= RecordLevel:
+        try:
+            ArticleInfo["essay"] = json.dumps(Detial)
+            ArticleInfo["type"] = "json"
+        except TypeError as e:
+            ArticleInfo["essay"] = str(Detial)
+            ArticleInfo["type"] = "html/text"
+            
         #考虑专用函数
         try:
             res = sqllib.CreatArtical(ArticleInfo)
