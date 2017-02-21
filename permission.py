@@ -22,88 +22,103 @@ class PermissionError(Exception):
 #
 ####################################      
 def ReadArticleList(User,Article):
-    if "Self" in User["permissions"]["ReadArticleList"]:
+    PermissionName = "ReadArticleList"
+    if "Self" in User["permissions"][PermissionName]:
         if User["uid"] == Article["uid"]:
             return True
-    if "PublicUser" in User["permissions"]["ReadArticleList"]:
-        if Article["uid"] == PUBLICUSER:
+    if "PublicUser" in User["permissions"][PermissionName]:
+        if Article["name"] == PUBLICUSER:
             return True
-    if "SameGroup" in User["permissions"]["ReadArticleList"]:
+    if "SameGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] == Article["permissions"]["Weight"]:
             return True
-    if "LowerGroup" in User["permissions"]["ReadArticleList"]:
+    if "LowerGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] > Article["permissions"]["Weight"]:
             return True
     if "All" in User["permissions"]["ReadArticleList"]:
         return True
+    if Article["name"] in User["permissions"][PermissionName]:
+        return True
     raise PermissionError("ReadArticleList","User:'%s' Don't Have Permission to Read Other's ArticleList"%User["name"],[User,Article])
     
 def ReadArticle(User,Article):
-    if "Self" in User["permissions"]["ReadArticle"]:
+    PermissionName = "ReadArticle"
+    if "Self" in User["permissions"][PermissionName]:
         if User["uid"] == Article["uid"]:
             return True
-    if "PublicUser" in User["permissions"]["ReadArticle"]:
-        if Article["uid"] == PUBLICUSER:
+    if "PublicUser" in User["permissions"][PermissionName]:
+        if Article["name"] == PUBLICUSER:
             return True
-    if "SameGroup" in User["permissions"]["ReadArticle"]:
+    if "SameGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] == Article["permissions"]["Weight"]:
             return True
-    if "LowerGroup" in User["permissions"]["ReadArticle"]:
+    if "LowerGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] > Article["permissions"]["Weight"]:
             return True
-    if "All" in User["permissions"]["ReadArticle"]:
+    if "All" in User["permissions"][PermissionName]:
+        return True
+    if Article["name"] in User["permissions"][PermissionName]:
         return True
     raise PermissionError("ReadArticle","User:'%s' Don't Have Permission to Read Other's Article"%User["name"],[User,Article])
     
 def CreateArticle(User,Article):
+    PermissionName = "CreateArticle"
     if User["permissions"]["MaxArticleNum"] <= Article["articlenum"]:
         raise PermissionError("CreateArticle","You Can't Create More Article",[User,Article]) 
-    if "Self" in User["permissions"]["CreateArticle"]:
+    if "Self" in User["permissions"][PermissionName]:
         if User["uid"] == Article["uid"]:
             return True
-    if "PublicUser" in User["permissions"]["CreateArticle"]:
-        if Article["uid"] == PUBLICUSER:
+    if "PublicUser" in User["permissions"][PermissionName]:
+        if Article["name"] == PUBLICUSER:
             return True
-    if "SameGroup" in User["permissions"]["CreateArticle"]:
+    if "SameGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] == Article["permissions"]["Weight"]:
             return True
-    if "LowerGroup" in User["permissions"]["CreateArticle"]:
+    if "LowerGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] > Article["permissions"]["Weight"]:
             return True
-    if "All" in User["permissions"]["CreateArticle"]:
+    if "All" in User["permissions"][PermissionName]:
+        return True
+    if Article["name"] in User["permissions"][PermissionName]:
         return True
     raise PermissionError("CreateArticle","User:'%s' Don't Have Permission to Create Other's Article"%User["name"],[User,Article]) 
     
 def EditArticle(User,Article):
-    if "Self" in User["permissions"]["EditArticle"]:
+    PermissionName = "EditArticle"
+    if "Self" in User["permissions"][PermissionName]:
         if User["uid"] == Article["uid"]:
             return True
-    if "PublicUser" in User["permissions"]["EditArticle"]:
-        if Article["uid"] == PUBLICUSER:
+    if "PublicUser" in User["permissions"][PermissionName]:
+        if Article["name"] == PUBLICUSER:
             return True
-    if "SameGroup" in User["permissions"]["EditArticle"]:
+    if "SameGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] == Article["permissions"]["Weight"]:
             return True
-    if "LowerGroup" in User["permissions"]["EditArticle"]:
+    if "LowerGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] > Article["permissions"]["Weight"]:
             return True
-    if "All" in User["permissions"]["EditArticle"]:
+    if "All" in User["permissions"][PermissionName]:
+        return True
+    if Article["name"] in User["permissions"][PermissionName]:
         return True
     raise PermissionError("EditArticle","User:'%s' Don't Have Permission to Edit Other's Article"%User["name"],[User,Article])
     
 def DeleteArticle(User,Article):
-    if "Self" in User["permissions"]["DeleteArticle"]:
+    PermissionName = "DeleteArticle"
+    if "Self" in User["permissions"][PermissionName]:
         if User["uid"] == Article["uid"]:
             return True
-    if "PublicUser" in User["permissions"]["DeleteArticle"]:
-        if Article["uid"] == PUBLICUSER:
+    if "PublicUser" in User["permissions"][PermissionName]:
+        if Article["name"] == PUBLICUSER:
             return True
-    if "SameGroup" in User["permissions"]["DeleteArticle"]:
+    if "SameGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] == Article["permissions"]["Weight"]:
             return True
-    if "LowerGroup" in User["permissions"]["DeleteArticle"]:
+    if "LowerGroup" in User["permissions"][PermissionName]:
         if User["permissions"]["Weight"] > Article["permissions"]["Weight"]:
             return True
-    if "All" in User["permissions"]["DeleteArticle"]:
+    if "All" in User["permissions"][PermissionName]:
+        return True
+    if Article["name"] in User["permissions"][PermissionName]:
         return True
     raise PermissionError("DeleteArticle","User:'%s' Don't Have Permission to Delete Other's Article"%User["name"],[User,Article])

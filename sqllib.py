@@ -56,7 +56,7 @@ def GetUserPermission (cursor,uid):
         raise SqlError("GetUserPermission","Unknow Error")
         
 def GetArticleInfo (cursor,title,uid):
-    ArticleColumn = ('id','uid','blgroup','permission')
+    ArticleColumn = ('id','uid','name','blgroup','permission')
     SqlArticleField = str(ArticleColumn).replace("'","`")[1:-1]
     if not title.isdigit():
         Sql =  """select """+SqlArticleField+""" from """+TABLE["article"]+""" WHERE `title`=%s AND `uid`=%s"""

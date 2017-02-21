@@ -18,8 +18,8 @@ DEFAULTGROUP={
 "ReadArticleList":("Self","PublicUser"),
 "CreateArticle":("Self"),
 "DeleteArticle":("Self"),
-"EditArticle":("Self"),
-"SearchArticle":("Self"),
+"EditArticle":("Self","PublicUser"),
+"SearchArticle":("Self","PublicUser"),
 "MaxArticleNum":100
 }
 ####################################
