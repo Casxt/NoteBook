@@ -46,7 +46,7 @@ def Record(Level,Summary,Detial,Addition=0):
             
         #考虑专用函数
         try:
-            res = sqllib.CreatArtical(ArticleInfo)
+            res = sqllib.CreatArticle(ArticleInfo)
         except PermissionError as e:
             if "You Can't Create More Article" in e.err:
                 ClearLog(LoggerDeleteNum)
@@ -69,7 +69,7 @@ def ClearLog(Num):
     "page":1,
     "eachpage":Num
     }
-    results = sqllib.GetArticalList(ArticleListInfo)["result"]
+    results = sqllib.GetArticleList(ArticleListInfo)["result"]
     #考虑批量删除函数
     for result in results:
         DeleteInfo = {
@@ -78,5 +78,5 @@ def ClearLog(Num):
         "author":LoggerName,
         "uid":LoggerId
         }
-        sqllib.DeleteArticalByNameTitle(DeleteInfo)
+        sqllib.DeleteArticleByNameTitle(DeleteInfo)
     return (results)

@@ -116,26 +116,34 @@ function checkeurl() {
     } else if (matchpathlogout.test(path)) {
         //
     } else if (matchpathedit.test(path)) {
-        EditArtical();
+        EditArticle();
 
     } else if (matchpathregister.test(path)) {
         //
     } else if (matchpathlist.test(path)) {
+        var html = document.getElementById("listshower");
+        var pagehtml = document.getElementById("list-page");
+        var cookie_name = unescape(getCookie("name"));
+        html.innerHTML = "";
+        pagehtml.innerHTML = "";
+        $("#title-editer").hide();
+        $("#essay-editer").hide();
+        $("#shower").hide();
         GetArticleList();
     } else if (matchpathsearch.test(path)) {
         //搜索
-        SearchArtical();
+        SearchArticle();
     }  else if (matchuserpath.test(path)) {
-        autogetartical();
+        autogetarticle();
     } else if (matchpath.test(path)) {
-        autogetartical();
+        autogetarticle();
     } else {//匹配到不符合规则的url时？
-        autoloadartical();
+        autoloadarticle();
     }
     return 0;
 }
 //自动加载文章
-function autoloadartical() {
+function autoloadarticle() {
     let path = window.location.pathname;
     let essay = unescape(getCookie((path=="/")?"newessay":"essay"));
     let title = unescape(getCookie((path=="/")?"newtitle":"title"));
@@ -153,7 +161,7 @@ function autoloadartical() {
     article.updateInput();
 }
 
-function autogetartical() {
+function autogetarticle() {
     let passwords = arguments[0] ? arguments[0] : 0;
     let path = window.location.pathname;
     let matchpath2 = /^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
@@ -165,7 +173,7 @@ function autogetartical() {
     $("#title-editer").hide();
     $("#essay-editer").hide();
     document.getElementById("showtitle").innerHTML = "Loading...";
-    document.getElementById("showartical").innerHTML = "";
+    document.getElementById("showarticle").innerHTML = "";
     if (a[2] != "undefined" && a[4] != "undefined") {
         var name_path = a[1];
         var postdata = {
@@ -173,7 +181,7 @@ function autogetartical() {
             "name": cookie_name,
             "author": a[2],
             "title": a[4],
-            "password": sha256($("#Modal-artical-passwords").val()),
+            "password": sha256($("#Modal-article-passwords").val()),
         };
         if (cookie_name!=a[2]){
             isuser = false;
@@ -183,7 +191,7 @@ function autogetartical() {
         var postdata = {
             "mode":"GetArticle",
             "title": a[2],
-            "password": sha256($("#Modal-artical-passwords").val()),
+            "password": sha256($("#Modal-article-passwords").val()),
         };
     } else {
         alert("缺少关键信息");
@@ -192,37 +200,42 @@ function autogetartical() {
     if (!passwords) {
         delete(postdata["password"]);
     }
-    var pas = $("#Modal-artical-passwords").val();
+    var pas = $("#Modal-article-passwords").val();
     $.ajax({
         beforeSend: function(request) {
             request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
-        url: '/getartical/',
+        url: '/getarticle/',
         data: postdata,
         dataType: 'json',
         success: function(data) {
             if (data.state == "success") {
-                $("#Modal-artical-password").modal("hide");
+                $("#Modal-article-password").modal("hide");
                 article.setAttribute("pubtime",data.pubtime);
                 article.setAttribute("id",data.id);
                 article.setAttribute("lastesttime",data.lastesttime);
                 article.setAttribute("type",data.type);
                 article.setTitle(data.title);
                 article.setEssay(data.essay);
-                let title = data.title;
-                let essay = data.essay;
+                let title = article.title.cleanTitle(data.title);
+                let essay = article.essay.cleanEssay(data.essay);
                 let href =  encodeURI(name_path) + encodeURIComponent(title);
+                console.log(data.type);
                 article.show(isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title,
                             article.essay.format(essay,data.type));
+                //article.setTitle(edittitle);
+                //article.setEssay(editessay);
+                //article.show();
+                //article.updateInput();
             } else if (data.state == "Need Password") {
-                $("#Modal-artical-password").modal("show");
+                $("#Modal-article-password").modal("show");
                 document.getElementById("showtitle").innerHTML = data.title;
-                document.getElementById("showartical").innerHTML = data.essay;
+                document.getElementById("showarticle").innerHTML = data.essay;
             } else {
-                $("#Modal-artical-password").modal("hide");
+                $("#Modal-article-password").modal("hide");
                 document.getElementById("showtitle").innerHTML = data.title;
-                document.getElementById("showartical").innerHTML = data.essay;
+                document.getElementById("showarticle").innerHTML = data.essay;
             }
             return (data);
         }
@@ -268,12 +281,12 @@ function GetArticleList() { //获取文章列表
             request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
-        url: '/getarticallist/',
+        url: '/getarticlelist/',
         data: postdata,
         dataType: 'json',
         success: function(data) {
             if (data.state == "success") {
-                list = data.articallist;
+                list = data.articlelist;
                 var count = Math.ceil(data.count/20);
                 var title = "";
                 var num = 0;
@@ -281,14 +294,15 @@ function GetArticleList() { //获取文章列表
                     title = list[i].title;
                     var ifpassword = list[i].ifpassword;
                     //var href =  encodeURI(name + title);encodeURI不会对/编码
-                    var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
-                    html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;" class="list-group-item">\
-                                                            <span class="label '+ARTICLEIDSTYLE+'">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
+                    var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);//href="/' + href + '/"
+/*onclick="window.location.href=' + "'/e/" + href + "/'" + '" */
+                    html.innerHTML = html.innerHTML + '<li id="' + list[i].id + '" href="/' + href + '/" type="button" onclick="return true" style="display:none;" class="list-group-item article-list-item">\
+                                                            <h5 style="margin:0.08em;" ><span class="label '+ARTICLEIDSTYLE+'">' + list[i].id + '</span><span style="padding-right: 1em;" ></span>\
                                                             '+(ifpassword?'<span class="glyphicon glyphicon-lock"></span><span style="padding-right: 1em;" ></span>':'')+'\
                                                             <strong>' + title + '</strong>\
-                                                            <button value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                            <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
-                                                            <span class="glyphicon glyphicon-edit"></span></button></a>';
+                                                            <button value="' + title + '" type="button" class="close article-delete"><span class="glyphicon glyphicon-remove"></span></button>\
+                                                            <button  style="padding-right: 0.5em;" type="button" class="close article-edit"><span class="glyphicon glyphicon-edit"></span></button>\
+                                                            </h5></li>';
                     num++;
                 }
                 for (i=1;i<=count;i++) {
@@ -306,7 +320,7 @@ function GetArticleList() { //获取文章列表
                 }
                 ArticleListFadeIn(list,0,num);
                 if (a[4] != getCookie("name")) {
-                    $(".artical-delete").hide();
+                    $(".article-delete").hide();
                 }
             } else {
                 alert(data.state);
@@ -317,7 +331,7 @@ function GetArticleList() { //获取文章列表
 }
 
 //获取编辑文章信息 改正则时注意a的位置编号
-function EditArtical() {
+function EditArticle() {
     var path = window.location.pathname;
     var matchpath2 = /^\/e(dit)?\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
     var a = matchpath2.exec(path);
@@ -344,7 +358,7 @@ function EditArtical() {
                 request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
-            url: '/getartical/',
+            url: '/getarticle/',
             data: postdata,
             dataType: 'json',
             success: function(data) {
@@ -353,10 +367,12 @@ function EditArtical() {
                     let essay = data.essay;
                     let edittitle = unescape(getCookie("title"))
                     let editessay = unescape(getCookie("essay"))
-                    if (edittitle == "null" ){
+                    if (!edittitle || edittitle == "null" ){
+                        
                         edittitle = title;
                     }
-                    if (editessay == "null"){
+                    if (!edittitle || editessay == "null" || editessay == ""){
+                        
                         editessay = essay;
                     }
                     document.getElementById("text-submit").id = "text-edit-submit";
@@ -367,8 +383,8 @@ function EditArtical() {
                     article.setAttribute("type",data.type);
                     article.setTitle(edittitle);
                     article.setEssay(editessay);
-                    article.show();
                     article.updateInput();
+                    article.show();
                     if (a[6] == undefined) {
                         document.getElementById("text-edit-submit").path = "/" + a[2] + a[4];
                     } else {
@@ -383,7 +399,7 @@ function EditArtical() {
         });
 }
 //搜索事件
-function SearchArtical() {
+function SearchArticle() {
     let path = window.location.pathname;
     let matchpath2 = /(^\/s(earch)?\/(([\S\s]{0,}?)\/?))$/g; //匹配文章
     let a = matchpath2.exec(path);
@@ -412,7 +428,7 @@ function SearchArtical() {
         dataType: 'json',
         success: function(data) {
             if (data.state == "success") {
-                list = data.articallist
+                list = data.articlelist
                 //var title = "";
                 if (list.length < 1) {
                     $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
@@ -435,8 +451,8 @@ function SearchArtical() {
                         var href =  (name?(encodeURIComponent(name)+"/"):("")) + encodeURIComponent(title);
                         html.innerHTML = html.innerHTML + '<a id="' + list[i].id + '" href="/' + href + '/" type="button" style="display:none;overflow: visible;" class="list-group-item" >\
                                                                 <span class="label '+ARTICLEIDSTYLE+'">' + list[i].id + '</span><span style="padding-right: 1em;" ></span><strong>' + title + '</strong>' + (list[i].name==cookiename?('\
-                                                                <button id="' + title + ' "value="' + title + '" type="button" class="close artical-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
-                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close artical-edit" data-dismiss="alert" aria-label="Edit">\
+                                                                <button id="' + title + ' "value="' + title + '" type="button" class="close article-delete" data-dismiss="alert" aria-label="Close"><span class="glyphicon glyphicon-remove"></span></button>\
+                                                                <button onclick="window.location.href=' + "'/e/" + href + "/'" + '" style="padding-right: 0.5em;" type="button" class="close article-edit" data-dismiss="alert" aria-label="Edit">\
                                                                 <span class="glyphicon glyphicon-edit"></span></button>'):('<button class="close" style="font-size: 1em;" type="button" >'+(list[i].name?list[i].name:'Public Aritcal')+'</button>'))+'</a>';
                         num++;
                    }

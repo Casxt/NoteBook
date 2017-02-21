@@ -84,7 +84,7 @@ var Essay = {
         
         //获取essay时使用此函数
         essay.get=function(){
-            return Essay.text;
+            return essay.text;
         };
         //更新essay时使用此函数
         essay.set=function(t){
@@ -105,11 +105,11 @@ var Essay = {
         essay.format=FormatEssay;
         //刷新essay显示区
         essay.show=function(e=null){
-            $(essay.outputId).html(essay.format(e?e:essay.get(),essay.type));
+            $(essay.outputId).html(e?e:essay.format(essay.get(),essay.type));
         };
         //刷新essay输入区
         essay.updateInput=function(){
-            e = essay.cleanEssay(essay.get());
+            e = essay.get();
             if (essay.editor == "textarea"){
                 $(essay.inputId).val(e);
             }
@@ -119,17 +119,19 @@ var Essay = {
         };
         essay.cleanEssay = function(e){
             if (e){
-                e = e.replace(/<script/g, "").replace(/script>/g, "");
-                e = e.replace(/<iframe/g, "").replace(/iframe>/g, "");
-                e = e.replace(/<link/g, "");
-                e = e.replace(/<style/g, "").replace(/style>/g, "");
-                e = e.replace(/<frameset/g, "").replace(/frameset>/g, "");
+                e = e.replace(/<script/gi, "").replace(/script>/gi, "");
+                e = e.replace(/<iframe/gi, "").replace(/iframe>/gi, "");
+                e = e.replace(/<link/gi, "");
+                e = e.replace(/<style/gi, "").replace(/style>/gi, "");
+                e = e.replace(/<frameset/gi, "").replace(/frameset>/gi, "");
+                return e;
             }
-            return e;
+            return "";
         };
         //隐藏函数供公共函数调用使用
         essay.setEssay=function(e){
             essay.text = essay.cleanEssay(e);
+            essay.updateInput(essay.get());
         };
         //隐藏函数供公共函数调用使用
         essay.updateAttribute=function(Attribute,value){
@@ -234,7 +236,7 @@ var Title = {
         
         //获取title时使用此函数
         title.get=function(){
-            return Title.text;
+            return title.text;
         };
         //更新title时使用此函数
         title.set=function(t){
@@ -250,7 +252,8 @@ var Title = {
         };
         title.cleanTitle = function(t){
             t = t.replace(/<|>/g, "");
-            t = t.replace(/\s+/g, " ");
+            t = t.replace(/^\s+/g, "");
+            t = t.replace(/\s/g, " ");
             return t;
         };
         //保存
@@ -261,8 +264,8 @@ var Title = {
         //隐藏函数供公共函数调用使用
         title.setTitle=function(t){
             t = title.cleanTitle(t);
-            $(title.inputId).val(t);
             title.text = t;
+            title.updateInput();
         };
         //隐藏函数供公共函数调用使用
         title.getTitle=function(){
@@ -285,7 +288,7 @@ var Article = {
     createNew:function(){
         var article = {
             title:Title.createNew("#text-title","#showtitle"),
-            essay:Essay.createNew("#text-artical","#showartical","#text-type","#text-password","#text-id","#text-pubtime","#text-lastesttime")
+            essay:Essay.createNew("#text-article","#showarticle","#text-type","#text-password","#text-id","#text-pubtime","#text-lastesttime")
         };
         article.show=function(t=null,e=null){
             article.title.show(t);

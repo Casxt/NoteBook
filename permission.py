@@ -56,7 +56,7 @@ def ReadArticle(User,Article):
     raise PermissionError("ReadArticle","User:'%s' Don't Have Permission to Read Other's Article"%User["name"],[User,Article])
     
 def CreateArticle(User,Article):
-    if User["permissions"]["MaxArticleNum"] <= Article["articalnum"]:
+    if User["permissions"]["MaxArticleNum"] <= Article["articlenum"]:
         raise PermissionError("CreateArticle","You Can't Create More Article",[User,Article]) 
     if "Self" in User["permissions"]["CreateArticle"]:
         if User["uid"] == Article["uid"]:

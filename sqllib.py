@@ -59,9 +59,9 @@ def GetArticleInfo (cursor,title,uid):
     ArticleColumn = ('id','uid','blgroup','permission')
     SqlArticleField = str(ArticleColumn).replace("'","`")[1:-1]
     if not title.isdigit():
-        Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `title`=%s AND `uid`=%s"""
+        Sql =  """select """+SqlArticleField+""" from """+TABLE["article"]+""" WHERE `title`=%s AND `uid`=%s"""
     else:
-        Sql =  """select """+SqlArticleField+""" from """+TABLE["artical"]+""" WHERE `id`=%s AND `uid`=%s"""
+        Sql =  """select """+SqlArticleField+""" from """+TABLE["article"]+""" WHERE `id`=%s AND `uid`=%s"""
     cursor.execute(Sql,(title,uid))
     value = cursor.fetchone()
     if value is not None:
@@ -120,7 +120,7 @@ def CreateUser (uf):#创建用户
 
 def GetUid (name,cursor,*l):#快速查询uid，permission，group,可追加字段
     uf={}
-    usercolumn=['uid','name','permission','articalnum','group']
+    usercolumn=['uid','name','permission','articlenum','group']
     usercolumn.extend(l)
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `name`=%s """
@@ -135,7 +135,7 @@ def GetUid (name,cursor,*l):#快速查询uid，permission，group,可追加字�
     
 def GetName (uid,cursor,*l):#快速查询uid，permission，group
     uf={}
-    usercolumn=['uid','name','permission','articalnum','group']
+    usercolumn=['uid','name','permission','articlenum','group']
     usercolumn.extend(l)
     SqlUserField = str(usercolumn).replace("'","`")[1:-1]
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `uid`=%s """
@@ -204,41 +204,41 @@ def ResetPassword (uf):#重置密码
 #
 ####################################
 
-def CreatArtical (ActionInfo):#创建文章
-    Articalcolumn = ('title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
-    ArticalColumn = str(Articalcolumn).replace("'","`")
+def CreatArticle (ActionInfo):#创建文章
+    Articlecolumn = ('title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
+    ArticleColumn = str(Articlecolumn).replace("'","`")
     (conn,cursor) = SqlOpen()
     #获取用户信息,鉴权
     uf = GetName (ActionInfo["uid"],cursor)
     if uf is None:
         SqlClose(conn,cursor)
-        raise SqlError("CreatArtical","No Such User %s"%(ActionInfo["uid"]),ActionInfo)
+        raise SqlError("CreatArticle","No Such User %s"%(ActionInfo["uid"]),ActionInfo)
     ActionInfo.update(uf)
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
     Per = Permission.CreateArticle(ActionInfo,ActionInfo["authorInfo"])
     if Per is True:
         try:
             #创建文章
-            ArticleSql = """insert into """+TABLE["artical"]+""" """+ArticalColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
-            cursor.execute(ArticleSql,(ActionInfo["title"],ActionInfo["authorInfo"]["uid"],ActionInfo["name"],ActionInfo["essay"],ActionInfo.get("type",DEFAULTARTICALTYPE),ActionInfo.get("tag",None),ActionInfo.get("permission",None),ActionInfo.get("blgroup",None),ActionInfo.get("salt",None),ActionInfo.get("saltpassword",None),ActionInfo.get("remark",None)))
+            ArticleSql = """insert into """+TABLE["article"]+""" """+ArticleColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
+            cursor.execute(ArticleSql,(ActionInfo["title"],ActionInfo["authorInfo"]["uid"],ActionInfo["name"],ActionInfo["essay"],ActionInfo.get("type",DEFAULTARTICLETYPE),ActionInfo.get("tag",None),ActionInfo.get("permission",None),ActionInfo.get("blgroup",None),ActionInfo.get("salt",None),ActionInfo.get("saltpassword",None),ActionInfo.get("remark",None)))
             #若上句执行错误则不会执行下句
-            UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`+1) where `uid`=%s"""
+            UserSql = """update """+TABLE["user"]+""" set `articlenum`=(`articlenum`+1) where `uid`=%s"""
             cursor.execute(UserSql,(ActionInfo["uid"]))
         except pymysql.err.IntegrityError as e:
             if "Duplicate entry" in str(e):
-                raise SqlError("CreatArtical","User:'%s' Duplicate entry Title"%ActionInfo["name"],ActionInfo)
+                raise SqlError("CreatArticle","User:'%s' Duplicate entry Title"%ActionInfo["name"],ActionInfo)
             else:
-                raise SqlError("CreatArtical",traceback.format_exc(),ActionInfo)
+                raise SqlError("CreatArticle",traceback.format_exc(),ActionInfo)
         finally:
             SqlClose(conn,cursor)
         return True
 
-def EditArtical (ActionInfo):
-    ARTICALFIELD=('title','essay','type','tag','blgroup','salt','saltpassword','remark')#,'permission'
+def EditArticle (ActionInfo):
+    ARTICLEFIELD=('title','essay','type','tag','blgroup','salt','saltpassword','remark')#,'permission'
     #拼接set语句
     SetUpdateColumn = ""
     SetUpdateInfo=[]
-    for key in ARTICALFIELD:
+    for key in ARTICLEFIELD:
         if key in ActionInfo:
             SetUpdateColumn = SetUpdateColumn+"`"+str(key)+"`=%s,"
             SetUpdateInfo.append(ActionInfo[key])
@@ -255,25 +255,25 @@ def EditArtical (ActionInfo):
         ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
     except SqlError as e:
         SqlClose(conn,cursor)
-        raise SqlError("EditArtical","No Such Article '%s' Belong to '%s'!!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
+        raise SqlError("EditArticle","No Such Article '%s' Belong to '%s'!!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
     
     Per = Permission.EditArticle(ActionInfo,ArticleInfo)
     if Per is True:
         try:
             SetUpdateInfo.append(ActionInfo["authorInfo"]["uid"])
             SetUpdateInfo.append(ActionInfo["rawtitle"])
-            sql = """update """+TABLE["artical"]+""" set """+SetUpdateColumn+"""`lastesttime`=now() where `uid`=%s AND `title`=%s"""
+            sql = """update """+TABLE["article"]+""" set """+SetUpdateColumn+"""`lastesttime`=now() where `uid`=%s AND `title`=%s"""
             num = cursor.execute(sql,SetUpdateInfo)
         except pymysql.err.IntegrityError as e:
             if "Duplicate entry" in str(e):
-                raise SqlError("CreatArtical","标题重复",ActionInfo)
+                raise SqlError("CreatArticle","标题重复",ActionInfo)
             else:
-                raise SqlError("CreatArtical",traceback.format_exc(),ActionInfo)
+                raise SqlError("CreatArticle",traceback.format_exc(),ActionInfo)
         finally:
             SqlClose(conn,cursor)
         return True
         
-def DeleteArticalByNameTitle (ActionInfo):#必须登陆后才能删除，必须带uid
+def DeleteArticleByNameTitle (ActionInfo):#必须登陆后才能删除，必须带uid
     (conn,cursor) = SqlOpen()
     ActionInfo.update(GetUid(ActionInfo['name'],cursor))
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
@@ -281,21 +281,21 @@ def DeleteArticalByNameTitle (ActionInfo):#必须登陆后才能删除，必须�
         ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo['authorInfo']['uid'])
     except SqlError as e:
         SqlClose(conn,cursor)
-        raise SqlError("DeleteArticalByNameTitle","No Such Article '%s' Belong to '%s'!!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
+        raise SqlError("DeleteArticleByNameTitle","No Such Article '%s' Belong to '%s'!!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
     
     Per = Permission.DeleteArticle(ActionInfo,ArticleInfo)
     if Per is True:
         #DELETE FROM 表名称 WHERE 列名称 = 值
-        ArticleSql =  """DELETE from """+TABLE["artical"]+""" WHERE `uid`=%s AND `title`=%s """
+        ArticleSql =  """DELETE from """+TABLE["article"]+""" WHERE `uid`=%s AND `title`=%s """
         values = cursor.execute(ArticleSql,(ActionInfo["uid"],ActionInfo["title"]))
-        UserSql = """update """+TABLE["user"]+""" set `articalnum`=(`articalnum`-1) where `uid`=%s"""
+        UserSql = """update """+TABLE["user"]+""" set `articlenum`=(`articlenum`-1) where `uid`=%s"""
         cursor.execute(UserSql,(ActionInfo["uid"]))
         SqlClose(conn,cursor)
         return values
         
-def GetArtical (ActionInfo):#直接获取文章信息
-    Articalcolumn=('id','uid','name','title','essay','type','tag','permission','blgroup','pubtime','lastesttime','salt','saltpassword')
-    ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
+def GetArticle (ActionInfo):#直接获取文章信息
+    Articlecolumn=('id','uid','name','title','essay','type','tag','permission','blgroup','pubtime','lastesttime','salt','saltpassword')
+    ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     ######
     #拼接索搜语句
@@ -311,7 +311,7 @@ def GetArtical (ActionInfo):#直接获取文章信息
             ArticleInfo = GetArticleInfo(cursor,ActionInfo['id'],ActionInfo["authorInfo"]["uid"])
     except SqlError as e:
         SqlClose(conn,cursor)
-        raise SqlError("GetArtical","No Such Article '%s' Belong to '%s' !!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
+        raise SqlError("GetArticle","No Such Article '%s' Belong to '%s' !!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
     
     if ActionInfo["mode"] == "edit":
         Per = Permission.EditArticle(ActionInfo,ArticleInfo)
@@ -320,21 +320,21 @@ def GetArtical (ActionInfo):#直接获取文章信息
         
     if Per is True:
         if "title" in ActionInfo:
-            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND `title`=%s"""
+            sql =  """select """+ArticleColumn+""" from """+TABLE["article"]+""" WHERE `name`=%s AND `title`=%s"""
             cursor.execute(sql,(ActionInfo["author"],ActionInfo["title"]))
         else:
-            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `name`=%s AND `id`=%s"""
+            sql =  """select """+ArticleColumn+""" from """+TABLE["article"]+""" WHERE `name`=%s AND `id`=%s"""
             cursor.execute(sql,(ActionInfo["author"],ActionInfo["id"]))
         value = cursor.fetchone()
         SqlClose(conn,cursor)
         #若文章不存在，则在GetArticleInfo时已经开始报错
-        d = dict(zip(Articalcolumn,value))
+        d = dict(zip(Articlecolumn,value))
         return d
 
-def GetArticalList (ActionInfo):#获取文章列表
+def GetArticleList (ActionInfo):#获取文章列表
     #ActionInfo应有page一项,eachpage,order 升序asc /降序desc
-    Articalcolumn=('id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime')#,'essay'
-    ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
+    Articlecolumn=('id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime')#,'essay'
+    ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     ######
     #拼接索搜语句
@@ -345,27 +345,27 @@ def GetArticalList (ActionInfo):#获取文章列表
     Per = Permission.ReadArticleList(ActionInfo,ActionInfo["authorInfo"])
     if Per is True:
         if ActionInfo["order"] == "ASC":
-            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` Limit %s,%s """
+            sql =  """select """+ArticleColumn+""" from """+TABLE["article"]+""" WHERE `uid`=%s ORDER BY `id` Limit %s,%s """
         else:
-            sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
+            sql =  """select """+ArticleColumn+""" from """+TABLE["article"]+""" WHERE `uid`=%s ORDER BY `id` DESC Limit %s,%s """
         cursor.execute(sql,(ActionInfo["authorInfo"]["uid"],(ActionInfo["page"]-1)*ActionInfo["eachpage"],ActionInfo["eachpage"]))
         values = cursor.fetchall()
-        CountSql =  """select COUNT(*) from """+TABLE["artical"]+""" WHERE `uid`=%s"""
+        CountSql =  """select COUNT(*) from """+TABLE["article"]+""" WHERE `uid`=%s"""
         cursor.execute(CountSql,(ActionInfo["authorInfo"]["uid"]))
         num = cursor.fetchall()
         SqlClose(conn,cursor)
         res = {"result":[]}
         res["count"] = num
         for value in values:
-            d = dict(zip(Articalcolumn,value))
+            d = dict(zip(Articlecolumn,value))
             d["ifpassword"] = False if (d["saltpassword"]==None) else True
             res["result"].append(d)
         return res
 
-def SearchArtical (ActionInfo):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
+def SearchArticle (ActionInfo):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
     #搜索权限设计？
-    Articalcolumn=('id','name','title','essay','type','permission','blgroup','pubtime','lastesttime')
-    ArticalColumn = str(Articalcolumn).replace("'","`")[1:-1]
+    Articlecolumn=('id','name','title','essay','type','permission','blgroup','pubtime','lastesttime')
+    ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
     #登录才能使用
@@ -375,7 +375,7 @@ def SearchArtical (ActionInfo):#简单搜索#必须保证搜索词为关键词�
     if "uid" not in ActionInfo:
         ActionInfo["uid"]=GetUid (ActionInfo.get("name",PUBLICUSER),cursor)["uid"]
     keyword = '%'+ActionInfo['keyword'].replace(" ","%")+'%'
-    sql =  """select """+ArticalColumn+""" from """+TABLE["artical"]+""" 
+    sql =  """select """+ArticleColumn+""" from """+TABLE["article"]+""" 
     WHERE ( `uid`=%s OR `uid`=%s ) AND `saltpassword` is NULL 
     AND ( `essay` LIKE %s OR  `title` LIKE %s) LIMIT 0,20"""
     cursor.execute(sql,(ActionInfo["uid"],PUBLICUSER,keyword,keyword))
@@ -383,7 +383,7 @@ def SearchArtical (ActionInfo):#简单搜索#必须保证搜索词为关键词�
     SqlClose(conn,cursor)
     result = []
     for value in values:
-        result.append(dict(zip(Articalcolumn,value)))
+        result.append(dict(zip(Articlecolumn,value)))
     return result
 
 ####################################
@@ -401,7 +401,7 @@ def DefineUserTable ():#取得查询所需的关键字
             `salt`  text CHARACTER SET utf8 NOT NULL ,
             `saltpassword`  text CHARACTER SET utf8 NOT NULL ,
             `permission`  text CHARACTER SET utf8 NULL,
-            `articalnum`  int DEFAULT 0 ,
+            `articlenum`  int DEFAULT 0 ,
             `lgnfailedtimes`  int DEFAULT 0 ,
             `group`  text CHARACTER SET utf8 NULL ,
             `remark`  text CHARACTER SET utf8 NULL ,
@@ -415,9 +415,9 @@ def DefineUserTable ():#取得查询所需的关键字
     cursor.execute(sql)
     SqlClose(conn,cursor)
     return True
-def DefineArticalTable ():#文章表
+def DefineArticleTable ():#文章表
     (conn,cursor) = SqlOpen()
-    sql =   """CREATE TABLE `"""+TABLE["artical"]+"""` (
+    sql =   """CREATE TABLE `"""+TABLE["article"]+"""` (
             `id`  bigint NOT NULL AUTO_INCREMENT ,
             `uid`  varchar(40) CHARACTER SET utf8 NOT NULL ,
             `name`  varchar(40) CHARACTER SET utf8 NOT NULL ,
@@ -442,7 +442,7 @@ def DefineArticalTable ():#文章表
     cursor.execute(sql)
     SqlClose(conn,cursor)
     return True
-def DefineArticalSearchTable ():#文章查询表
+def DefineArticleSearchTable ():#文章查询表
     (conn,cursor) = SqlOpen()
     sql =   """CREATE TABLE `"""+TABLE["search"]+"""` (
             `id`  bigint NOT NULL AUTO_INCREMENT ,

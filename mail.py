@@ -25,8 +25,8 @@ def _format_addr(s):
     name, addr = parseaddr(s)
     return formataddr((Header(name, 'utf-8').encode(), addr))
 
-def Send(MAIL_TO_ADDR=MAIL_TO_ADDR,MAIL_TITLE=MAIL_TITLE,MAIL_ARTICAL=MAIL_ARTICAL):
-    msg = MIMEText(MAIL_ARTICAL, 'plain', 'utf-8')
+def Send(MAIL_TO_ADDR=MAIL_TO_ADDR,MAIL_TITLE=MAIL_TITLE,MAIL_ARTICLE=MAIL_ARTICLE):
+    msg = MIMEText(MAIL_ARTICLE, 'plain', 'utf-8')
     msg['From'] = _format_addr('<'+MAIL_FROM_ADDR+'>')
     msg['To'] = _format_addr('<'+MAIL_TO_ADDR+'>')
     msg['Subject'] = Header(MAIL_TITLE, 'utf-8').encode()

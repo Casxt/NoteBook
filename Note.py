@@ -82,7 +82,7 @@ def CheckUser(uf):#检查用户能否登录
         sqllib.LoginFailed ({'name':uf["name"]})
         return ({"state":"Failed"})
     
-def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
+def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
 
     try:
         ActionInfo = CheckParamet(["name","author","title","mode"],ActionInfo)
@@ -90,8 +90,8 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"Paramet Error","essay":e.err,"state":"Failed"})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"GetArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"title":"GetArtical UnKnowErr","essay":"GetArtical UnKnowErr","state":"Failed"})
+        logger.Record("ERROR",str(e),{"Function":"GetArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"title":"GetArticle UnKnowErr","essay":"GetArticle UnKnowErr","state":"Failed"})
 
     #ActionInfo["title"] = CleanTitle(ActionInfo["title"])#id title共用关键字
     ActionInfo["id"] = 0
@@ -100,7 +100,7 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
         del ActionInfo["title"]
 
     try:
-        artical = sqllib.GetArtical(ActionInfo)
+        article = sqllib.GetArticle(ActionInfo)
     except PermissionError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"Permission Denied","essay":e.err,"state":"Failed"})
@@ -108,32 +108,32 @@ def GetArtical(ActionInfo):#快速获取文章内容，用于主页展示和文�
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"No Such Title","essay":e.err,"state":"Failed"})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"GetArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"title":"GetArtical UnkonwErr","essay":"GetArtical UnkonwErr","state":"Failed"})
+        logger.Record("ERROR",str(e),{"Function":"GetArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"title":"GetArticle UnkonwErr","essay":"GetArticle UnkonwErr","state":"Failed"})
 
-    if artical["saltpassword"] is not None:#如果有密码
-        artical["havepassword"]=True
+    if article["saltpassword"] is not None:#如果有密码
+        article["havepassword"]=True
         if ActionInfo["mode"]=="edit":#如果有传入密码
-            artical["state"]="success"
+            article["state"]="success"
         elif ActionInfo.get("password",None) is None:#如果没有传入密码
             return {"state":"Need Password","title":"Permission Denied","essay":"Need Password"}
-        elif CheckArticalPassword({"saltpassword":artical["saltpassword"],"salt":artical["salt"],"password":ActionInfo.get("password","None")}):#如果有传入密码
-            artical["state"]="success"
+        elif CheckArticlePassword({"saltpassword":article["saltpassword"],"salt":article["salt"],"password":ActionInfo.get("password","None")}):#如果有传入密码
+            article["state"]="success"
         else:#传入密码错误
             return {"state":"Failed","title":"Get Title Error","essay":"Get Essay Error"}
     else:
-        artical["havepassword"]=False
-        artical["state"]="success"
+        article["havepassword"]=False
+        article["state"]="success"
 
-    del artical["saltpassword"]
-    del artical["salt"]
-    del artical["uid"]
-    artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
-    artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
-    return artical
+    del article["saltpassword"]
+    del article["salt"]
+    del article["uid"]
+    article["lastesttime"]=article["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
+    article["pubtime"]=article["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
+    return article
 
         
-def SubmitArtical(ActionInfo):
+def SubmitArticle(ActionInfo):
     
     try:
         ActionInfo = CheckParamet(["uid","name","author","title","essay","type"],ActionInfo)
@@ -141,13 +141,13 @@ def SubmitArtical(ActionInfo):
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"SubmitArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"state":"SubmitArtical UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"SubmitArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"state":"SubmitArticle UnKnowErr"})
     
     #检查文章种类
     try:
         if CheckTitle(ActionInfo["title"]):
-            sqllib.CreatArtical (ActionInfo)
+            sqllib.CreatArticle (ActionInfo)
             return({"state":"success"})
         else:
             return({"state":"Title Err"})
@@ -155,11 +155,11 @@ def SubmitArtical(ActionInfo):
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"SubmitArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
+        logger.Record("ERROR",str(e),{"Function":"SubmitArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
         return("未知错误")
 
         
-def EditArtical(ActionInfo):#修改文章
+def EditArticle(ActionInfo):#修改文章
 #ActionInfo=('title','name','essay','permission','password')
     try:
         ActionInfo = CheckParamet(["uid","name","author","title","rawtitle","essay","type"],ActionInfo,["password"])
@@ -167,8 +167,8 @@ def EditArtical(ActionInfo):#修改文章
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"EditArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"state":"EditArtical UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"EditArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"state":"EditArticle UnKnowErr"})
         
     if "password" in ActionInfo:
         if ActionInfo["password"]==str(RESETARTCALPASSWORD):#如果取消密码
@@ -179,17 +179,17 @@ def EditArtical(ActionInfo):#修改文章
             ActionInfo = CreateSaltAndPassword(ActionInfo)
 
     try:
-        if sqllib.EditArtical(ActionInfo) is True:
+        if sqllib.EditArticle(ActionInfo) is True:
             return ({"state":"success"})
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return({"state": e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"EditArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
+        logger.Record("ERROR",str(e),{"Function":"EditArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
         return({"state": "EditArticle UnkonwErr"})
 
         
-def DeleteArticalByNameTitle (ActionInfo):
+def DeleteArticleByNameTitle (ActionInfo):
 
     try:
         ActionInfo = CheckParamet(["uid","name","author","title"],ActionInfo)
@@ -197,21 +197,21 @@ def DeleteArticalByNameTitle (ActionInfo):
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"EditArtical","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"state":"EditArtical UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"EditArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"state":"EditArticle UnKnowErr"})
 
     try:
-        sqllib.DeleteArticalByNameTitle(ActionInfo)
+        sqllib.DeleteArticleByNameTitle(ActionInfo)
         return ({"state":"success"})
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"DeleteArticalByNameTitle","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return({"state":"DeleteArtical Unknow Error"})
+        logger.Record("ERROR",str(e),{"Function":"DeleteArticleByNameTitle","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return({"state":"DeleteArticle Unknow Error"})
 
         
-def GetArticalList(ActionInfo):
+def GetArticleList(ActionInfo):
 
     try:
         ActionInfo = CheckParamet(["uid","name","author"],ActionInfo,["page","eachpage","order"])
@@ -219,28 +219,28 @@ def GetArticalList(ActionInfo):
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"GetArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"state":"GetArticalList UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"GetArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"state":"GetArticleList UnKnowErr"})
 
     try:
-        res = sqllib.GetArticalList (ActionInfo)
+        res = sqllib.GetArticleList (ActionInfo)
         count = res["count"]
         result = res["result"]
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return {'state':e.err}
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"GetArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return {'state':'GetArticalList UnKnowErr'}
-    for artical in result:
-        artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
-        artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
-        if artical["saltpassword"]==None:
-            artical["password"]=0
+        logger.Record("ERROR",str(e),{"Function":"GetArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return {'state':'GetArticleList UnKnowErr'}
+    for article in result:
+        article["lastesttime"]=article["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
+        article["pubtime"]=article["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
+        if article["saltpassword"]==None:
+            article["password"]=0
         else:
-            artical["password"]=1
-        del artical["saltpassword"]
-    return {'state':'success','articallist':result,'count':count}
+            article["password"]=1
+        del article["saltpassword"]
+    return {'state':'success','articlelist':result,'count':count}
 
 
 def SpiderResponser(url):
@@ -261,7 +261,7 @@ def GetSpiderArticle(user,title):
         "name":user,
         "iflogin":False
     }
-    res = GetArtical(af)
+    res = GetArticle(af)
     return APIDERARTICLE.format(res["title"],res["essay"])
     
 #保密性需求，是否要开放列表？
@@ -273,10 +273,10 @@ def GetSpiderArticleList(list,user):
         "name":user,
         "iflogin":False
     }
-    res = GetArticalList(af)
+    res = GetArticleList(af)
     return 0
     
-def SearchArticalList(ActionInfo):
+def SearchArticleList(ActionInfo):
 
     try:
         ActionInfo = CheckParamet(["uid","name","author","keyword"],ActionInfo,["page","eachpage","order"])
@@ -284,24 +284,24 @@ def SearchArticalList(ActionInfo):
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"SearchArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({"state":"SearchArticalList UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"SearchArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({"state":"SearchArticleList UnKnowErr"})
         
     ActionInfo["keyword"] = ActionInfo["keyword"].strip()
     try:
-        result = sqllib.SearchArtical (ActionInfo)
-        for artical in result:
-            artical["lastesttime"]=artical["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
-            artical["pubtime"]=artical["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
-            if artical["name"]==PUBLICUSER:
-                del artical["name"]
-        return({'state':'success','keyword':ActionInfo["keyword"],'articallist':result})
+        result = sqllib.SearchArticle (ActionInfo)
+        for article in result:
+            article["lastesttime"]=article["lastesttime"].strftime('%Y-%m-%d %H:%M:%S')
+            article["pubtime"]=article["pubtime"].strftime('%Y-%m-%d %H:%M:%S')
+            if article["name"]==PUBLICUSER:
+                del article["name"]
+        return({'state':'success','keyword':ActionInfo["keyword"],'articlelist':result})
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return({'state':e.err,'keyword':ActionInfo["keyword"]})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"SearchArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return({'state':'SearchArticalList UnknowErr','keyword':ActionInfo["keyword"]})
+        logger.Record("ERROR",str(e),{"Function":"SearchArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return({'state':'SearchArticleList UnknowErr','keyword':ActionInfo["keyword"]})
         
 def CreateUser(ActionInfo):#生成用户，生成uid，生成盐
     import uuid
@@ -312,8 +312,8 @@ def CreateUser(ActionInfo):#生成用户，生成uid，生成盐
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({'state':e.err})
     except Exception as e:
-        logger.Record("ERROR",str(e),{"Function":"SearchArticalList","Info":ActionInfo,"Detial":traceback.format_exc()})
-        return ({'state':"SearchArticalList UnKnowErr"})
+        logger.Record("ERROR",str(e),{"Function":"SearchArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
+        return ({'state':"SearchArticleList UnKnowErr"})
     
     #ActionInfo should have ('uid','name','mail','salt','saltpassword')
     #ActionInfo["name"] = ActionInfo["name"].lower()
@@ -335,7 +335,7 @@ def CreateUser(ActionInfo):#生成用户，生成uid，生成盐
     #生成uid
     ActionInfo['uid'] = str(uuid.uuid3(uuid.uuid1(), ActionInfo['mail']))
     try:
-        mail.Send(ActionInfo["mail"],MAIL_TITLE_SIGNIN,MAIL_ARTICAL_SIGNIN)
+        mail.Send(ActionInfo["mail"],MAIL_TITLE_SIGNIN,MAIL_ARTICLE_SIGNIN)
         info = sqllib.CreateUser(ActionInfo)
         return ({'state':"success"})
     except (SqlError,PermissionError,MailError) as e:
@@ -361,7 +361,7 @@ def ChangeUserPassword(ActionInfo):#更改密码，要求登录
             info = sqllib.GetUserInfo (ActionInfo)
             info["password"] = ActionInfo["newpassword"]
             info = CreateSaltAndPassword(info)
-            mail.Send(info["mail"],MAIL_TITLE_CGPASSWORD,MAIL_ARTICAL_CGPASSWORD)
+            mail.Send(info["mail"],MAIL_TITLE_CGPASSWORD,MAIL_ARTICLE_CGPASSWORD)
             sqllib.ResetPassword (info)
             return {'state':"success"}
         except (SqlError,PermissionError,MailError) as e:
@@ -398,7 +398,7 @@ def ReCreateUserPassword(ActionInfo):#重置密码用户名
         info["password"] = newpassword
         info = CreateSaltAndPassword(info)
         try:
-            mail.Send(ActionInfo["mail"],MAIL_TITLE_RSPASSWORD,MAIL_ARTICAL_RSPASSWORD%(newpassword))
+            mail.Send(ActionInfo["mail"],MAIL_TITLE_RSPASSWORD,MAIL_ARTICLE_RSPASSWORD%(newpassword))
             sqllib.ResetPassword (info)#重置密码
             sqllib.CleanFailedTimes (info)#清空登录计数
             return {'state':"success"}
@@ -410,18 +410,18 @@ def ReCreateUserPassword(ActionInfo):#重置密码用户名
     else:
         return {'state':"Mail Not Match"}
 
-def CleanTitle(Title):
-    Title = re.sub(r'\s',' ', Title)
-    Title.replace("<","").replace(">","")
-    return Title
+# def CleanTitle(Title):
+    # Title = re.sub(r'\s',' ', Title)
+    # Title.replace("<","").replace(">","")
+    # return Title
 
-def CleanArtical(Artical):
-    Artical.replace("<script","").replace("script>","")
-    Artical.replace("<iframe","").replace("iframe>","")
-    Artical.replace("<link","")
-    Artical.replace("<style","").replace("style>","")
-    Artical.replace("<frameset","").replace("frameset>","")
-    return Artical
+# def CleanArticle(Article):
+    # Article.replace("<script","").replace("script>","")
+    # Article.replace("<iframe","").replace("iframe>","")
+    # Article.replace("<link","")
+    # Article.replace("<style","").replace("style>","")
+    # Article.replace("<frameset","").replace("frameset>","")
+    # return Article
 
         
 def CheckUserName(Name):#检查用户名是否合法
@@ -481,7 +481,7 @@ def CheckKeyWord(KeyWord):
         return True  
 
 def CheckArticleType(Type):
-    if Type in ARTICALTYPELIST:
+    if Type in ARTICLETYPELIST:
         return True
     else:
         return False
@@ -627,7 +627,10 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
             if CheckFunction[Key](ActionInfo[Key]) is True:
                 ResInfo[Key] = ActionInfo[Key]
             else:
-                raise NoteError("CheckParamet","IllLegal Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                if Key!="eaasy":
+                    raise NoteError("CheckParamet","IllLegal Paramet '%s':'%s'"%(Key,ActionInfo[Key]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                else:
+                    raise NoteError("CheckParamet","IllLegal Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         except KeyError as e:
             if Key not in OptionalParametKeySet:
                 raise NoteError("CheckParamet","Missing Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
@@ -656,7 +659,7 @@ def CreateSaltAndPassword(af):#重新生成salt和密码
     af['saltpassword'] = saltpassword.hexdigest()
     return af
 
-def CheckArticalPassword(ActionInfo):#发现文章有密码之后的操作
+def CheckArticlePassword(ActionInfo):#发现文章有密码之后的操作
     shapassword = hashlib.sha256()
     shapassword.update((str(ActionInfo["password"])+ActionInfo['salt']).encode('utf-8'))
     if shapassword.hexdigest()==ActionInfo['saltpassword']:

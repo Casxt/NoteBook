@@ -1,11 +1,11 @@
 
-//»ñÈ¡ÎÄÕÂĞÅÏ¢
-$(document).on('click', '#Modal-artical-passwords-submit',
+//è·å–æ–‡ç« ä¿¡æ¯
+$(document).on('click', '#Modal-article-passwords-submit',
 function() {
     $(this).html("Loading...");
-    autogetartical(1);
+    autogetarticle(1);
 });
-//¼à¿Ø»Ø³µËÑËØ
+//ç›‘æ§å›è½¦æœç´ 
 $(document).on('keydown', '#header-search',
 //$('#header-search').keydown(
 function(Key) {
@@ -13,7 +13,7 @@ function(Key) {
         var keyword = document.getElementById("header-search").value;
         history.pushState({},
         "note", ("/search/" + encodeURIComponent(keyword) + "/"));
-        var res = SearchArtical();
+        var res = SearchArticle();
         if (res) {
             //history.back();
         } else {
@@ -21,14 +21,14 @@ function(Key) {
         }
     }
 });
-//ËÑË÷°´Å¥¼à¿Ø
+//æœç´¢æŒ‰é’®ç›‘æ§
 $(document).on('click', '#header-search-buttom',
 function() {
     if (CheckSearchInput($('#header-search').val())) {
         var keyword = document.getElementById("header-search").value;
         history.pushState({},
         "note", ("/search/" + encodeURIComponent(keyword) + "/"));
-        var res = SearchArtical();
+        var res = SearchArticle();
         if (res) {
             //history.back();
         } else {
@@ -36,7 +36,7 @@ function() {
         }
     }
 });
-//¼ì²éËÑË÷¹Ø¼ü´Ê
+//æ£€æŸ¥æœç´¢å…³é”®è¯
 $('#header-search').on("focus",
 function() {
     $('#search-warning').fadeOut(SEARCHWARNINGFADETIME);
@@ -47,16 +47,16 @@ function() {
     CheckSearchInput($('#header-search').val());
 });
 
-//¼à¿ØÌá½»ĞŞ¸Ä
+//ç›‘æ§æäº¤ä¿®æ”¹
 $(document).on('click', '#text-edit-submit',
-function() { //Ìá½»ÎÄÕÂ
+function() { //æäº¤æ–‡ç« 
     document.getElementById("text-edit-submit").className = "btn btn-warning";
     document.getElementById("text-edit-submit").innerHTML = "submitting...";
     var path = window.location.pathname
     var name = document.getElementById("text-edit-submit").name;
     var rawtitle = document.getElementById("text-edit-submit").value;
     var title = $("#text-title").val();
-    var essay = $("#text-artical").val();
+    var essay = $("#text-article").val();
     var cookie_name = unescape(getCookie("name"));
     var postdata = {
         "mode": "SubmitEditedArticle",
@@ -84,7 +84,7 @@ function() { //Ìá½»ÎÄÕÂ
                 request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
-            url: '/editartical/',
+            url: '/editarticle/',
             data: postdata,
             dataType: 'json',
             success: function(data, status) {
@@ -102,12 +102,12 @@ function() { //Ìá½»ÎÄÕÂ
         });
     } 
 });
-//¼à¿ØÌá½»
+//ç›‘æ§æäº¤
 $(document).on('click', '#text-submit',
 function() {
     var path = window.location.pathname
     var title = document.getElementById("text-title").value;
-    var essay = document.getElementById("text-artical").value;
+    var essay = document.getElementById("text-article").value;
     var cookie_name = unescape(getCookie("name"));
     var postdata = {
         "mode": "SubmitArticle",
@@ -135,9 +135,9 @@ function() {
                 request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
             },
             type: 'POST',
-            url: '/submitartical/',
+            url: '/submitarticle/',
             data: postdata,
-            // contentType: "application/json",//¸Ã¾ä´úÂë²»ÄÜ¼Ó£¬¼ÓÁËÖ®ºóÎŞ·¨POST
+            // contentType: "application/json",//è¯¥å¥ä»£ç ä¸èƒ½åŠ ï¼ŒåŠ äº†ä¹‹åæ— æ³•POST
             dataType: 'json',
             success: function(data, status) {
                 if (data.state == "success") {
@@ -154,18 +154,40 @@ function() {
         });
     }
 });
-//¼à¿ØÉ¾³ı
-$(document).on('click', '.artical-delete',
-function() { //Ìá½»ÎÄÕÂ
+
+//ç›‘æ§è·³è½¬
+$(document).on('click', '.article-list-item',
+function() { //æäº¤æ–‡ç« 
+    let href = $(this).attr('href');
+    if (href && href!="" && href!="undefined"){
+        window.location.href = href;
+    }    
+});
+
+//ç›‘æ§ç¼–è¾‘æŒ‰é’®
+$(document).on('click', '.article-edit',
+function() { //æäº¤æ–‡ç« 
+    let href = $(this).parent().parent().attr("href");
+    //æ¸…ç©ºherfé˜²æ­¢è·³è½¬
+   $(this).parent().parent().attr("href","");
+    window.location.href = '/e'+href;
+});
+
+//ç›‘æ§åˆ é™¤
+$(document).on('click', '.article-delete',
+function() { //æäº¤æ–‡ç« 
     var thisitem = $(this);
-    var title = $(this).val();
-    $(this).html('<span id="search-warning" class="label label-warning">Deleteing...</span>');
+    //æ¸…ç©ºherfé˜²æ­¢è·³è½¬
+    $(this).parent().parent().attr("href","");
+    var title = $(this).parent().children("strong").text();
+    
+    $(this).html('<span class="label label-warning">deling...</span>');
     $.ajax({
         beforeSend: function(request) {
             request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
         },
         type: 'POST',
-        url: '/deleteartical/',
+        url: '/deletearticle/',
         data: {
             "mode": "DeleteArticle",
             "author": getCookie("name"),
@@ -176,8 +198,7 @@ function() { //Ìá½»ÎÄÕÂ
         success: function(data) {
             if (data.state == "success") {
                 thisitem.html('<span id="search-warning" class="label label-success">success</span>');
-                thisitem.parent().hide();
-                //$(("#" + title)).hide();
+                thisitem.parent().parent().hide();
             } else {
                 alert(data.state);
             }
@@ -185,13 +206,13 @@ function() { //Ìá½»ÎÄÕÂ
     });
 });
 
-//¼à¿ØµÇÂ¼°´Å¥
+//ç›‘æ§ç™»å½•æŒ‰é’®
 $(document).on('click', "#open-login",
 function() {
     $("#Modal-Login").modal("show");
 });
 $(document).on('click', "#login-bottom",
-function() { //Ìá½»µÇÂ¼
+function() { //æäº¤ç™»å½•
     document.getElementById("login-bottom").className = "btn btn-warning";
     document.getElementById("login-bottom").innerHTML = "Checking...";
     $.ajax({
@@ -206,7 +227,7 @@ function() { //Ìá½»µÇÂ¼
             "password": sha256($("#login-password").val())
         },
         dataType: 'json',
-        success: function(data) { //µÇÂ½³É¹¦
+        success: function(data) { //ç™»é™†æˆåŠŸ
             if (data.state != "success") {
                 document.getElementById("login-bottom").className = "btn btn-danger";
                 document.getElementById("login-bottom").innerHTML = data.state;
@@ -221,32 +242,32 @@ function() { //Ìá½»µÇÂ¼
         }
     });
 });
-//¼à¿ØÏêÏ¸ĞÅÏ¢°´Å¥
+//ç›‘æ§è¯¦ç»†ä¿¡æ¯æŒ‰é’®
 $(document).on('click', '#text-info-show',
-function() //ÏêÏ¸ĞÅÏ¢
+function() //è¯¦ç»†ä¿¡æ¯
 {
-    $("#attributer").slideToggle("slow"); //slideToggleÊµÏÖÇĞ»»
+    $("#attributer").slideToggle("slow"); //slideToggleå®ç°åˆ‡æ¢
 });
 $(document).on('click', '#text-shower-show',
-function() //Õ¹Ê¾¿ò
+function() //å±•ç¤ºæ¡†
 {
     $("#shower").slideToggle("slow");
 });
 $(document).on('click', '#text-password-on',
-function() //ÆôÓÃÃÜÂë
+function() //å¯ç”¨å¯†ç 
 {
-    $(this).html("½ûÓÃ");
+    $(this).html("ç¦ç”¨");
     $(this).attr('id', 'text-password-off');
     $("#text-password").removeAttr('disabled');
 });
 $(document).on('click', '#text-password-off',
-function() //½ûÓÃÃÜÂë
+function() //ç¦ç”¨å¯†ç 
 {
-    $(this).html("ÆôÓÃ");
+    $(this).html("å¯ç”¨");
     $(this).attr('id', 'text-password-on');
     $("#text-password").attr('disabled', 'disabled');
 });
-//¼à¿Ø´ò¿ªµÇÂ¼ÍË³öÒ³
+//ç›‘æ§æ‰“å¼€ç™»å½•é€€å‡ºé¡µ
 $(document).on('click', '#open-login',
 function() {
     //window.open("/login");
@@ -256,7 +277,7 @@ function() {
     logout();
 });
 
-//¼à¿Ø×¢²á°´Å¥
+//ç›‘æ§æ³¨å†ŒæŒ‰é’®
 $(document).on('click', '#Signup-bottom',
 function() {
     $("#Modal-Login").modal('hide');
@@ -265,9 +286,9 @@ function() {
         show: true
     });
 });
-//¼à¿ØÌá½»×¢²á
+//ç›‘æ§æäº¤æ³¨å†Œ
 $(document).on('click', '#register-Signup',
-function() //Ìá½»×¢²á
+function() //æäº¤æ³¨å†Œ
 {
     var name = $("#register-name").val();
     var mail = $("#register-mail").val();
@@ -275,23 +296,23 @@ function() //Ìá½»×¢²á
     var password2 = $("#register-confirm-password").val();
     var istrue = true;
     if (!CheckRegisterName(name)) {
-        document.getElementById("register-name-warning").innerHTML = "ÓÃ»§ÃûÓĞÎó";
+        document.getElementById("register-name-warning").innerHTML = "ç”¨æˆ·åæœ‰è¯¯";
         return false;
     }
     if (!CheckRegisterMail(mail)) {
-        document.getElementById("register-mail-warning").innerHTML = "ÓÊÏäÓĞÎó";
+        document.getElementById("register-mail-warning").innerHTML = "é‚®ç®±æœ‰è¯¯";
         return false;
     }
     if (!CheckRegisterPassword(password1)) {
-        document.getElementById("register-password-warning").innerHTML = "ÃÜÂëÓĞÎó";
+        document.getElementById("register-password-warning").innerHTML = "å¯†ç æœ‰è¯¯";
         istrue = false;
     }
     if (!CheckRegisterPassword(password2)) {
-        document.getElementById("register-confirm-password-warning").innerHTML = "ÃÜÂëÓĞÎó";
+        document.getElementById("register-confirm-password-warning").innerHTML = "å¯†ç æœ‰è¯¯";
         istrue = false;
     }
     if (password1 != password2) {
-        document.getElementById("register-confirm-password-warning").innerHTML = "2´ÎÊäÈëÃÜÂë²»Í¬";
+        document.getElementById("register-confirm-password-warning").innerHTML = "2æ¬¡è¾“å…¥å¯†ç ä¸åŒ";
         istrue = false;
     }
     if (istrue) {
@@ -324,112 +345,112 @@ function() //Ìá½»×¢²á
     }
 });
 
-//¼à¿Ø×¢²áÀ¸ĞŞ¸Ä
-$(document).on('focus', '#register-name', //¼ì²éĞÕÃû
+//ç›‘æ§æ³¨å†Œæ ä¿®æ”¹
+$(document).on('focus', '#register-name', //æ£€æŸ¥å§“å
 function() {
     document.getElementById("register-name-warning").innerHTML = "";
 });
 
-$(document).on('blur', '#register-name', //¼ì²éĞÕÃû
+$(document).on('blur', '#register-name', //æ£€æŸ¥å§“å
 function() {
     var name = $("#register-name").val();
     if (!CheckRegisterName(name)) {
-        document.getElementById("register-name-warning").innerHTML = "°üº¬·Ç·¨×Ö·û";
+        document.getElementById("register-name-warning").innerHTML = "åŒ…å«éæ³•å­—ç¬¦";
     }
     if (name.length < 5) {
-        document.getElementById("register-name-warning").innerHTML = "ÖÁÉÙ5Î»";
+        document.getElementById("register-name-warning").innerHTML = "è‡³å°‘5ä½";
     }
 });
 
-$(document).on('focus', '#register-mail', //¼ì²éÓÊÏä
+$(document).on('focus', '#register-mail', //æ£€æŸ¥é‚®ç®±
 function() {
     document.getElementById("register-mail-warning").innerHTML = "";
 });
 
-$(document).on('blur', '#register-mail', //¼ì²éÓÊÏä
+$(document).on('blur', '#register-mail', //æ£€æŸ¥é‚®ç®±
 function() {
     var mail = $("#register-mail").val();
     if (!CheckRegisterMail(mail)) {
-        document.getElementById("register-mail-warning").innerHTML = "¸ñÊ½´íÎó";
+        document.getElementById("register-mail-warning").innerHTML = "æ ¼å¼é”™è¯¯";
     }
 });
-$(document).on('focus', '#register-password', //¼ì²éÃÜÂë1
+$(document).on('focus', '#register-password', //æ£€æŸ¥å¯†ç 1
 function() {
     document.getElementById("register-password-warning").innerHTML = "";
 });
 
-$(document).on('blur', '#register-password', //¼ì²éÃÜÂë1
+$(document).on('blur', '#register-password', //æ£€æŸ¥å¯†ç 1
 function() {
     var password1 = $("#register-password").val();
     if (!CheckRegisterPassword(password1)) {
-        document.getElementById("register-password-warning").innerHTML = "°üº¬·Ç·¨×Ö·û";
+        document.getElementById("register-password-warning").innerHTML = "åŒ…å«éæ³•å­—ç¬¦";
     }
     if (password1.length < 6) {
-        document.getElementById("register-password-warning").innerHTML = "ÖÁÉÙ6Î»";
+        document.getElementById("register-password-warning").innerHTML = "è‡³å°‘6ä½";
     }
 });
-$(document).on('focus', '#register-confirm-password', //¼ì²éÃÜÂë2
+$(document).on('focus', '#register-confirm-password', //æ£€æŸ¥å¯†ç 2
 function() {
     document.getElementById("register-confirm-password-warning").innerHTML = "";
 });
 
-$(document).on('blur', '#register-confirm-password', //¼ì²éÃÜÂë2
+$(document).on('blur', '#register-confirm-password', //æ£€æŸ¥å¯†ç 2
 function() {
     var password1 = $("#register-password").val();
     var password2 = $("#register-confirm-password").val();
     if (!CheckRegisterPassword(password2)) {
-        document.getElementById("register-confirm-password-warning").innerHTML = "°üº¬·Ç·¨×Ö·û";
+        document.getElementById("register-confirm-password-warning").innerHTML = "åŒ…å«éæ³•å­—ç¬¦";
     }
     if (password2.length < 6) {
-        document.getElementById("register-confirm-password-warning").innerHTML = "ÖÁÉÙ6Î»";
+        document.getElementById("register-confirm-password-warning").innerHTML = "è‡³å°‘6ä½";
     }
     if (password1 != password2) {
-        document.getElementById("register-confirm-password-warning").innerHTML = "2´ÎÊäÈëÃÜÂë²»Í¬";
+        document.getElementById("register-confirm-password-warning").innerHTML = "2æ¬¡è¾“å…¥å¯†ç ä¸åŒ";
     }
 });
 
 //=====================
-//¸ü¸ÄÃÜÂë¼ì²é
+//æ›´æ”¹å¯†ç æ£€æŸ¥
 //=====================
-//¼à¿ØĞŞ¸ÄÃÜÂë°´Å¥
+//ç›‘æ§ä¿®æ”¹å¯†ç æŒ‰é’®
 $(document).on('click', "#change-password",
 function() {
     $("#change-user-password").modal("show");
 });
-//¼ì²éÃÜÂë1
+//æ£€æŸ¥å¯†ç 1
 $(document).on('focus', '#change-newpassword',
 function() {
     document.getElementById("change-password-warning").innerHTML = "";
 });
-//¼ì²éÃÜÂë1
+//æ£€æŸ¥å¯†ç 1
 $(document).on('blur', '#change-newpassword',
 function() {
     var password1 = $("#change-newpassword").val();
     if (!CheckRegisterPassword(password1)) {
-        document.getElementById("change-password-warning").innerHTML = "°üº¬·Ç·¨×Ö·û";
+        document.getElementById("change-password-warning").innerHTML = "åŒ…å«éæ³•å­—ç¬¦";
     }
     if (password1.length < 6) {
-        document.getElementById("change-password-warning").innerHTML = "ÖÁÉÙ6Î»";
+        document.getElementById("change-password-warning").innerHTML = "è‡³å°‘6ä½";
     }
 });
-//¼ì²éÃÜÂë2
+//æ£€æŸ¥å¯†ç 2
 $(document).on('focus', '#change-confirm-newpassword',
 function() {
     document.getElementById("change-confirm-password-warning").innerHTML = "";
 });
-//¼ì²éÃÜÂë2
+//æ£€æŸ¥å¯†ç 2
 $(document).on('blur', '#change-confirm-newpassword',
 function() {
     var password1 = $("#change-newpassword").val();
     var password2 = $("#change-confirm-newpassword").val();
     if (!CheckRegisterPassword(password2)) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "°üº¬·Ç·¨×Ö·û";
+        document.getElementById("change-confirm-password-warning").innerHTML = "åŒ…å«éæ³•å­—ç¬¦";
     }
     if (password2.length < 6) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "ÖÁÉÙ6Î»";
+        document.getElementById("change-confirm-password-warning").innerHTML = "è‡³å°‘6ä½";
     }
     if (password1 != password2) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "2´ÎÊäÈëÃÜÂë²»Í¬";
+        document.getElementById("change-confirm-password-warning").innerHTML = "2æ¬¡è¾“å…¥å¯†ç ä¸åŒ";
     }
 });
 $(document).on('click', "#change-password-submit",
@@ -439,19 +460,19 @@ function() {
     var password2 = $("#change-confirm-newpassword").val();
     var istrue = true;
     if (!CheckRegisterPassword(oldpassword)) {
-        document.getElementById("change-oldpassword-warning").innerHTML = "ÃÜÂëÓĞÎó";
+        document.getElementById("change-oldpassword-warning").innerHTML = "å¯†ç æœ‰è¯¯";
         istrue = false;
     }
     if (!CheckRegisterPassword(password1)) {
-        document.getElementById("change-password-warning").innerHTML = "ÃÜÂëÓĞÎó";
+        document.getElementById("change-password-warning").innerHTML = "å¯†ç æœ‰è¯¯";
         istrue = false;
     }
     if (!CheckRegisterPassword(password2)) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "ÃÜÂëÓĞÎó";
+        document.getElementById("change-confirm-password-warning").innerHTML = "å¯†ç æœ‰è¯¯";
         istrue = false;
     }
     if (password1 != password2) {
-        document.getElementById("change-confirm-password-warning").innerHTML = "2´ÎÊäÈëÃÜÂë²»Í¬";
+        document.getElementById("change-confirm-password-warning").innerHTML = "2æ¬¡è¾“å…¥å¯†ç ä¸åŒ";
         istrue = false;
     }
     if (istrue) {
@@ -484,26 +505,26 @@ function() {
     }
 });
 //=====================
-//ÖØÖÃÃÜÂë
+//é‡ç½®å¯†ç 
 //=====================
-//¼à¿ØÖØÖÃÃÜÂë°´Å¥
+//ç›‘æ§é‡ç½®å¯†ç æŒ‰é’®
 $(document).on('click', "#reset-open",
 function() {
     $("#Modal-Login").modal("hide");
     $("#reset-password").modal("show");
 });
-//Ìá½»ÖØÖÃÃÜÂë
+//æäº¤é‡ç½®å¯†ç 
 $(document).on('click', "#reset-submit",
 function() {
     var name = $("#reset-name").val();
     var mail = $("#reset-mail").val();
     var istrue = true;
     if (!CheckRegisterName(name)) {
-        document.getElementById("reset-name-warning").innerHTML = "ÓÃ»§ÃûÓĞÎó";
+        document.getElementById("reset-name-warning").innerHTML = "ç”¨æˆ·åæœ‰è¯¯";
         istrue = false;
     }
     if (!CheckRegisterMail(mail)) {
-        document.getElementById("reset-mail-warning").innerHTML = "ÓÊÏäÓĞÎó";
+        document.getElementById("reset-mail-warning").innerHTML = "é‚®ç®±æœ‰è¯¯";
         istrue = false;
     }
     if (istrue) {

@@ -1,6 +1,6 @@
 //////////////////////
 //
-//»ù´¡¹¦ÄÜº¯Êý
+//åŸºç¡€åŠŸèƒ½å‡½æ•°
 //
 /////////////////////
 function isPhone() {
@@ -17,11 +17,11 @@ function isPhone() {
 }
 //////////////////////
 //
-//ÏÔÊ¾¸ñÊ½»¯º¯Êý
+//æ˜¾ç¤ºæ ¼å¼åŒ–å‡½æ•°
 //
 /////////////////////
 function FormatEssay(essay,type) {
-    //document.getElementById('showartical').setAttribute("style", ""); 
+    //document.getElementById('showarticle').setAttribute("style", ""); 
     SetPageStyleWhite();
     if (type=='html/text'){
         essay = FormatHtmlText(essay);
@@ -93,8 +93,8 @@ function FormatCode(essay) {
     var py = hljs.highlightAuto(essay);
     essay = py.value;
     essay = hljs.fixMarkup(essay);
-    essay = essay.replace(/\  /g,"&nbsp;&nbsp;"); //ÒÔ2¿Õ¸ñÎªµ¥Î»Ìæ»»
-    //¸ü¸ÄÈ«¾ÖÑùÊ½£¬¼ÇµÃ¸Ä»ØÈ¥
+    essay = essay.replace(/\  /g,"&nbsp;&nbsp;"); //ä»¥2ç©ºæ ¼ä¸ºå•ä½æ›¿æ¢
+    //æ›´æ”¹å…¨å±€æ ·å¼ï¼Œè®°å¾—æ”¹å›žåŽ»
     SetPageStyleBlack();
     return essay;
 }
@@ -103,31 +103,64 @@ function SetPageStyleWhite(){
     $("#navbar").attr("class", "navbar navbar-default navbar-fixed-top");
     document.body.style.backgroundColor="#FFFFFF";
     document.body.style.color = "#000000";
-    document.getElementById('showartical').setAttribute("style", "background:#FFFFFF;"); 
-    document.getElementById('header-search').setAttribute("style", "");
-    document.getElementById('header-search-buttom').setAttribute("style", "");
-    document.getElementById('shower-panel').setAttribute("style", "");
-    document.getElementById('shower-panel-heading').setAttribute("style", "");
+    document.getElementById('showarticle').style.background="#FFFFFF"; 
+    $("#header-search").css('background-color','');
+    $("#header-search").css('border','');
+    $("#header-search").css('color','');
+    
+    $("#header-search-buttom").css('background-color','');
+    $("#header-search-buttom").css('border','');
+    $("#header-search-buttom").css('color','');
+    
+    $("#shower-panel").css('background-color','');
+    $("#shower-panel").css('border','');
+    $("#shower-panel").css('color','');
+    
+    $("#shower-panel-heading").css('background-color','');
+    $("#shower-panel-heading").css('border','');
+    $("#shower-panel-heading").css('color','');
+    //document.getElementById('showarticle').setAttribute("style", "background:#FFFFFF;"); 
+    //document.getElementById('header-search').setAttribute("style", "");
+    //document.getElementById('header-search-buttom').setAttribute("style", "");
+    //document.getElementById('shower-panel').setAttribute("style", "");
+    //document.getElementById('shower-panel-heading').setAttribute("style", "");
 }
 function SetPageStyleBlack(){
     //navbar-inverse panel-title #75715e
     //$("#shower-panel").attr("class", "panel panel-primary");
     $("#navbar").attr("class", "navbar navbar-inverse navbar-fixed-top ");
-    document.getElementById('showartical').setAttribute("style", ""); 
-    document.getElementById('header-search').setAttribute("style", "background-color:#696969;border:#292929;color:#ffffff;");
-    document.getElementById('header-search-buttom').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
-    document.getElementById('shower-panel').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;");
-    document.getElementById('shower-panel-heading').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
-    //ÉèÖÃ×ÖÌåÑÕÉ« 
+    document.getElementById('showarticle').setAttribute("style", ""); 
+    
+    $("#header-search").css('background-color','#696969');
+    $("#header-search").css('border','#292929');
+    $("#header-search").css('color','#ffffff');
+    
+    $("#header-search-buttom").css('background-color','#696969');
+    $("#header-search-buttom").css('border','#696969');
+    $("#header-search-buttom").css('color','#ffffff');
+    
+    $("#shower-panel").css('background-color','#696969');
+    $("#shower-panel").css('border','#696969');
+    $("#shower-panel").css('color','#ffffff');
+    
+    $("#shower-panel-heading").css('background-color','#696969');
+    $("#shower-panel-heading").css('border','#696969');
+    $("#shower-panel-heading").css('color','#ffffff');
+    
+    //document.getElementById('header-search').setAttribute("style", "background-color:#696969;border:#292929;color:#ffffff;");
+    //document.getElementById('header-search-buttom').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
+    //document.getElementById('shower-panel').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;");
+    //document.getElementById('shower-panel-heading').setAttribute("style", "background-color:#696969;border:#696969;color:#ffffff;"); 
+    //è®¾ç½®å­—ä½“é¢œè‰² 
     document.body.style.backgroundColor="#292929";
     document.body.style.color = "#f8f8f2";
-    //ÎÄÕÂ±³¾°É« #f8f8f2 color
-    document.getElementById('showartical').setAttribute("style", "background:#23241f;"); 
+    //æ–‡ç« èƒŒæ™¯è‰² #f8f8f2 color
+    document.getElementById('showarticle').style.background="#23241f"; 
 }
 
 //////////////////////
 //
-//±à¼­Æ÷
+//ç¼–è¾‘å™¨
 //
 /////////////////////
 function ConfigWangEditor(editor){
@@ -164,27 +197,27 @@ function CloseWangEditor(essay){
 }
 //////////////////////
 //
-//Õ¹Ê¾¿òº¯Êý
+//å±•ç¤ºæ¡†å‡½æ•°
 //
 /////////////////////
-function CheckArticle() //ÉèÖÃÌá½»°´Å¥×´Ì¬
+function CheckArticle() //è®¾ç½®æäº¤æŒ‰é’®çŠ¶æ€
 {
     let essay = article.getEssay();
     let title = article.getTitle();
     if (essay.length >= MINESSAYLENGTH && essay.length <= MAXESSAYLENGTH && title.length >= MINTITLELENGTH && title.length <= MAXTITLELENGTH) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
         $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");
-        $("#text-submit,#text-edit-submit").text("Ìá½»");
+        $("#text-submit,#text-edit-submit").text("æäº¤");
         return true;
     } else if (essay.length < MINESSAYLENGTH || title.length < MINTITLELENGTH) {
         $("#text-submit,#text-edit-submit").attr('disabled', 'disabled');
         $("#text-submit,#text-edit-submit").attr("class", "btn btn-danger");
-        $("#text-submit,#text-edit-submit").text("ÄÚÈÝ¹ýÉÙ");
+        $("#text-submit,#text-edit-submit").text("å†…å®¹è¿‡å°‘");
         return false;
     } else if (essay.length > MAXESSAYLENGTH || title.length > MAXTITLELENGTH) {
         $("#text-submit,#text-edit-submit").attr('disabled', 'disabled');
         $("#text-submit,#text-edit-submit").attr("class", "btn btn-danger");
-        $("#text-submit,#text-edit-submit").text("ÄÚÈÝ¹ý¶à");
+        $("#text-submit,#text-edit-submit").text("å†…å®¹è¿‡å¤š");
         return false;
     }
 }

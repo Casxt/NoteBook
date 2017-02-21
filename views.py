@@ -27,26 +27,26 @@ def CheckLogin(request):
         return HttpResponse(json.dumps(ActionInfo)) 
         
 @ensure_csrf_cookie
-def submitartical(request):
+def submitarticle(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         if ("name" in ActionInfo) and ActionInfo["name"]!="" and ActionInfo["name"]!=None:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
-                info = Note.SubmitArtical(ActionInfo)
+                info = Note.SubmitArticle(ActionInfo)
                 return HttpResponse(json.dumps(info))
             else:
                 return HttpResponse(json.dumps('{"state":"%s"}'%str("请重新登录")))
         else:
             logout(request)
             ActionInfo.pop('name',None)
-            info = Note.SubmitArtical(ActionInfo)
+            info = Note.SubmitArticle(ActionInfo)
             return HttpResponse(json.dumps(info))
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
-def editartical(request):
+def editarticle(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
@@ -56,35 +56,35 @@ def editartical(request):
                 pass
             else:
                 del ActionInfo['name']
-            info = Note.EditArtical(ActionInfo)
+            info = Note.EditArticle(ActionInfo)
             return HttpResponse(json.dumps(info))
         else:
             ActionInfo.pop('name',None)
-            info = Note.EditArtical(ActionInfo)
+            info = Note.EditArticle(ActionInfo)
             return HttpResponse(json.dumps(info))
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
-def deleteartical(request):
+def deletearticle(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST' and "uid" in request.session:
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)#
         if logined:
-            state = Note.DeleteArticalByNameTitle(ActionInfo)
+            state = Note.DeleteArticleByNameTitle(ActionInfo)
             return HttpResponse(json.dumps(state))
         return HttpResponse(json.dumps({"state":"Name err"}))
         
 @ensure_csrf_cookie
-def getartical(request,keyword=None):
+def getarticle(request,keyword=None):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if not logined:
             ActionInfo.pop('name',None)
-        artical = Note.GetArtical(ActionInfo)
-        return HttpResponse(json.dumps(artical))
+        article = Note.GetArticle(ActionInfo)
+        return HttpResponse(json.dumps(article))
     #判断spider
     elif "spider" in request.META.get('HTTP_USER_AGENT', "").lower():
         res = Note.SpiderResponser(request.path)
@@ -92,7 +92,7 @@ def getartical(request,keyword=None):
     return render(request, 'note_index.html')
     
 @ensure_csrf_cookie
-def getarticallist(request):
+def getarticlelist(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
@@ -104,7 +104,7 @@ def getarticallist(request):
                 ActionInfo.pop("name",None)
                 logout(request)
                 
-        res = Note.GetArticalList(ActionInfo)#articallist是数组        
+        res = Note.GetArticleList(ActionInfo)#articlelist是数组        
         return HttpResponse(json.dumps(res))  
     return render(request, 'note_register.html')
     
@@ -133,14 +133,14 @@ def register(request):
     return render(request, 'note_register.html')
     
 @ensure_csrf_cookie
-def searchartical(request):
+def searcharticle(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name')
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if logined:
-            state = Note.SearchArticalList(ActionInfo)#articallist是数组
+            state = Note.SearchArticleList(ActionInfo)#articlelist是数组
             return HttpResponse(json.dumps(state)) 
     return render(request, 'note_index.html')
     

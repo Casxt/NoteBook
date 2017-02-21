@@ -14,17 +14,9 @@
   <script type="text/javascript" src="/js/wangEditor.min.js"></script>
   <script type="text/javascript" src="/js/notebook-gui.js"></script>
   <script type="text/javascript" src="/js/notebook-class.js"></script>
-    <style>
-    .list-group-item:hover
-    {
-    font-size:2em;
-    background-color:#f5f5f5;
-    cursor:pointer;
-    }
-    </style>
  </head> 
  <body style="padding-top: 70px;">
-  <!--å¯¼èˆªæ  --> 
+  <!--µ¼º½À¸ --> 
   <nav id="navbar" class="navbar navbar-default navbar-fixed-top"> 
    <div class="container"> 
     <div class="navbar-header"> 
@@ -33,13 +25,13 @@
     </div> 
     <div id="navbar-collapse" class="navbar-collapse collapse"> 
      <ul class="nav navbar-nav"> 
-      <li> <a href="/list">å…¬å…±æ–‡ç« </a> </li> 
+      <li> <a href="/list">¹«¹²ÎÄÕÂ</a> </li> 
       <li id="menu-user" class="dropdown"></li> 
       <div id="open-login" style="display:none;margin-left:5px;" class="navbar-form navbar-right"> 
-       <button type="button" class="btn btn-default">ç™»å½•/æ³¨å†Œ</button> 
+       <button type="button" class="btn btn-default">µÇÂ¼/×¢²á</button> 
       </div> 
      </ul> 
-     <!--æœç´¢æ  --> 
+     <!--ËÑË÷À¸ --> 
      <div id="search" style="display:none;" class="navbar-form navbar-right"> 
       <div class="form-group"> 
        <span id="search-warning" class="label label-warning"></span> 
@@ -47,80 +39,80 @@
       </div> 
       <button id="header-search-buttom" type="submit" class="btn btn-default">Search</button> 
      </div> 
-     <!--æœç´¢æ  --> 
+     <!--ËÑË÷À¸ --> 
     </div> 
    </div> 
   </nav> 
-  <!--å¯¼èˆªæ  --> 
-  <!--ç¼–è¾‘æ  --> 
+  <!--µ¼º½À¸ --> 
+  <!--±à¼­À¸ --> 
   <div id="title-editer" class="container"> 
-   <!--æ ‡é¢˜ --> 
+   <!--±êÌâ --> 
    <div class="input-group"> 
-    <span class="input-group-addon" id="sizing-addon2">æ ‡é¢˜:</span> 
+    <span class="input-group-addon" id="sizing-addon2">±êÌâ:</span> 
     <input id="text-title" type="text" class="form-control" placeholder="Title" /> 
    </div> 
   </div> 
   <div id="essay-editer" class="container" style="padding-top: 1em;"> 
-   <!--æ­£æ–‡--> 
+   <!--ÕýÎÄ--> 
    <textarea id="text-article" class="form-control" rows="25" placeholder="Article" style="max-width: 100%;"></textarea> 
 <!--    <textarea id="text-test" class="form-control" rows="10" placeholder="Article" style="max-width: 100%;"></textarea> 
  -->
-   <p style="padding-top: 1em;"> <button id="text-submit"  type="button" class="btn btn-primary">æäº¤</button> <button id="text-info-show" type="button" class="btn btn-default">è¯¦æƒ…</button> <button id="text-shower-show" type="button" class="btn btn-default">é¢„è§ˆ</button> </p> 
+   <p style="padding-top: 1em;"> <button id="text-submit"  type="button" class="btn btn-primary">Ìá½»</button> <button id="text-info-show" type="button" class="btn btn-default">ÏêÇé</button> <button id="text-shower-show" type="button" class="btn btn-default">Ô¤ÀÀ</button> </p> 
     <!-- disabled="disabled" -->
   </div> 
-  <!--ç¼–è¾‘æ  --> 
-  <!--å±žæ€§æ  --> 
+  <!--±à¼­À¸ --> 
+  <!--ÊôÐÔÀ¸ --> 
   <div id="attributer" class="container" style="display:none;"> 
    <div class=" panel panel-default"> 
     <div class="panel-body"> 
      <div class="row"> 
-      <!--æ–‡ç« å¯†ç  --> 
+      <!--ÎÄÕÂÃÜÂë --> 
       <div class="col-sm-6"> 
        <div class="input-group" style="padding-bottom: 1em;"> 
-        <span class="input-group-addon">å¯†ç :</span> 
-        <input id="text-password" type="text" class="form-control" disabled="disabled" placeholder="å¡«0å–æ¶ˆå¯†ç " /> 
-        <span class="input-group-btn"> <button id="text-password-on" class="btn btn-default" type="button">å¯ç”¨</button></span> 
+        <span class="input-group-addon">ÃÜÂë:</span> 
+        <input id="text-password" type="text" class="form-control" disabled="disabled" placeholder="Ìî0È¡ÏûÃÜÂë" /> 
+        <span class="input-group-btn"> <button id="text-password-on" class="btn btn-default" type="button">ÆôÓÃ</button></span> 
        </div> 
       </div> 
-      <!--æ–‡ç« å¯†ç  --> 
-      <!--æ–‡ç« tag --> 
+      <!--ÎÄÕÂÃÜÂë --> 
+      <!--ÎÄÕÂtag --> 
       <div class="col-sm-6" style="padding-bottom: 1em;"> 
        <div class="input-group"> 
         <span class="input-group-addon">tag:</span> 
         <input id="text-tag" type="text" class="form-control" /> 
-        <span class="input-group-addon">ç”¨ï¼Œæˆ–,åˆ†å‰²</span> 
+        <span class="input-group-addon">ÓÃ£¬»ò,·Ö¸î</span> 
        </div> 
       </div> 
-      <!--æ–‡ç« tag --> 
-      <!--æ–‡ç« type --> 
-      <!--id/æ–‡ç« æäº¤/ç¼–è¾‘æ—¥æœŸ --> 
+      <!--ÎÄÕÂtag --> 
+      <!--ÎÄÕÂtype --> 
+      <!--id/ÎÄÕÂÌá½»/±à¼­ÈÕÆÚ --> 
       <div class="col-lg-4" style="padding-bottom: 1em;"> 
       <div class="input-group"> 
-        <span class="input-group-addon">ç±»åž‹:</span> 
+        <span class="input-group-addon">ÀàÐÍ:</span> 
         <select id="text-type" class="form-control">
-         <!--è¯¥å—å†…å®¹ç”±jså¡«å†™-->
+         <!--¸Ã¿éÄÚÈÝÓÉjsÌîÐ´-->
         </select>
       </div> 
       </div> 
-      <!--æ–‡ç« type -->
-      <!--id/æ–‡ç« æäº¤/ç¼–è¾‘æ—¥æœŸ --> 
+      <!--ÎÄÕÂtype -->
+      <!--id/ÎÄÕÂÌá½»/±à¼­ÈÕÆÚ --> 
       <div class="col-lg-12" style="padding-bottom: 1em;"> 
        <div class="input-group"> 
         <span class="input-group-addon">ID:</span> 
         <input id="text-id" type="text" class="form-control" disabled="disabled" placeholder="000000" /> 
-        <span class="input-group-addon">æäº¤:</span> 
+        <span class="input-group-addon">Ìá½»:</span> 
         <input id="text-pubtime" type="text" class="form-control" disabled="disabled" placeholder="0000-00-00 00:00:00" /> 
-        <span class="input-group-addon">æœ€è¿‘ä¿®æ”¹:</span> 
+        <span class="input-group-addon">×î½üÐÞ¸Ä:</span> 
         <input id="text-lastesttime" type="text" class="form-control" disabled="disabled" placeholder="0000-00-00 00:00:00" /> 
        </div> 
       </div> 
-      <!--æ–‡ç« right -->
+      <!--ÎÄÕÂright -->
      </div> 
     </div> 
    </div> 
   </div> 
-  <!--å±žæ€§æ  --> 
-  <!--å±•ç¤ºæ  --> 
+  <!--ÊôÐÔÀ¸ --> 
+  <!--Õ¹Ê¾À¸ --> 
   <div id="shower" class="container"> 
    <div id="shower-panel" class="panel panel-default"> 
     <div id="shower-panel-heading" class="panel-heading"> 
@@ -131,37 +123,37 @@
     </div> 
    </div> 
   </div> 
-  <!--å±•ç¤ºæ  --> 
-  <!--åˆ—è¡¨ç»„ --> 
+  <!--Õ¹Ê¾À¸ --> 
+  <!--ÁÐ±í×é --> 
   <div class="container"> 
-   <ul id="listshower" class="list-group"> 
-    </ul>
-       <!--ç¿»é¡µ --> 
+   <div id="listshower" class="list-group"> 
+    </div>
+       <!--·­Ò³ --> 
         <nav class="container" style="text-align: center">
           <ul id="list-page" class="pagination">
           </ul>
         </nav>
-    <!--ç¿»é¡µ --> 
+    <!--·­Ò³ --> 
   </div> 
-  <!--åˆ—è¡¨ç»„ --> 
-  <!--æ³¨å†Œæ¨¡ç»„æ¡† --> 
+  <!--ÁÐ±í×é --> 
+  <!--×¢²áÄ£×é¿ò --> 
   <div id="Modal-Register" class="modal fade" tabindex="-1"> 
    <div class="modal-dialog" role="document"> 
     <div class="modal-content"> 
     </div> 
    </div> 
   </div> 
-  <!--æ³¨å†Œæ¨¡ç»„æ¡† --> 
-  <!--ç™»å½•æ¨¡ç»„æ¡† --> 
+  <!--×¢²áÄ£×é¿ò --> 
+  <!--µÇÂ¼Ä£×é¿ò --> 
   <div id="Modal-Login" class="modal fade" tabindex="-1"> 
    <div class="modal-dialog" role="document"> 
     <div class="modal-content"> 
      <div class="modal-header"> 
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span></button> 
-      <h4 class="modal-title">ç™»å½•</h4> 
+      <h4 class="modal-title">µÇÂ¼</h4> 
      </div> 
      <div class="modal-body"> 
-      <!--ç™»å½• --> 
+      <!--µÇÂ¼ --> 
       <div class="form-horizontal"> 
        <div class="form-group"> 
         <label class="col-sm-2 control-label">Email/Name</label> 
@@ -183,24 +175,24 @@
         </div> 
        </div> 
       </div> 
-      <!--ç™»å½• -->
+      <!--µÇÂ¼ -->
      </div> 
      <div class="modal-footer"> 
-      <button id="login-bottom" type="submit" class="btn btn-default">ç™»å½•</button> 
-      <button id="Signup-bottom" type="submit" class="btn btn-default">æ³¨å†Œ</button><!-- onclick="window.open('/register')"  -->
-      <button id="reset-open" type="submit" class="btn btn-default">å¿˜è®°å¯†ç </button> 
+      <button id="login-bottom" type="submit" class="btn btn-default">µÇÂ¼</button> 
+      <button id="Signup-bottom" type="submit" class="btn btn-default">×¢²á</button><!-- onclick="window.open('/register')"  -->
+      <button id="reset-open" type="submit" class="btn btn-default">Íü¼ÇÃÜÂë</button> 
      </div> 
     </div> 
    </div> 
   </div> 
-  <!--ç™»å½•æ¨¡ç»„æ¡† --> 
-  <!--æ–‡ç« å¯†ç æ¨¡ç»„æ¡† --> 
+  <!--µÇÂ¼Ä£×é¿ò --> 
+  <!--ÎÄÕÂÃÜÂëÄ£×é¿ò --> 
   <div id="Modal-article-password" class="modal fade" tabindex="-1"> 
    <div class="modal-dialog" role="document"> 
     <div class="modal-content"> 
      <div class="modal-header"> 
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span></button> 
-      <h4 class="modal-title">è¯·è¾“å…¥å¯†ç </h4> 
+      <h4 class="modal-title">ÇëÊäÈëÃÜÂë</h4> 
      </div> 
      <div class="modal-body"> 
       <div class="form-horizontal"> 
@@ -213,19 +205,19 @@
       </div> 
      </div> 
      <div class="modal-footer"> 
-      <button id="Modal-article-passwords-submit" type="submit" class="btn btn-default">æäº¤</button> 
+      <button id="Modal-article-passwords-submit" type="submit" class="btn btn-default">Ìá½»</button> 
      </div> 
     </div> 
    </div> 
   </div> 
-  <!--æ–‡ç« å¯†ç æ¨¡ç»„æ¡† --> 
-  <!--ä¿®æ”¹å¯†ç æ¨¡ç»„æ¡† --> 
+  <!--ÎÄÕÂÃÜÂëÄ£×é¿ò --> 
+  <!--ÐÞ¸ÄÃÜÂëÄ£×é¿ò --> 
   <div id="change-user-password" class="modal fade" tabindex="-1"> 
    <div class="modal-dialog" role="document"> 
     <div class="modal-content"> 
      <div class="modal-header"> 
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span></button> 
-      <h4 class="modal-title">è¯·è¾“å…¥æ–°æ—§å¯†ç </h4> 
+      <h4 class="modal-title">ÇëÊäÈëÐÂ¾ÉÃÜÂë</h4> 
      </div> 
      <div class="modal-body"> 
       <div class="form-horizontal"> 
@@ -253,19 +245,19 @@
       </div> 
      </div> 
      <div class="modal-footer"> 
-      <button id="change-password-submit" type="submit" class="btn btn-default">æäº¤</button> 
+      <button id="change-password-submit" type="submit" class="btn btn-default">Ìá½»</button> 
      </div> 
     </div> 
    </div> 
   </div> 
-  <!--ä¿®æ”¹å¯†ç æ¨¡ç»„æ¡† --> 
-  <!--é‡ç½®å¯†ç æ¨¡ç»„æ¡† --> 
+  <!--ÐÞ¸ÄÃÜÂëÄ£×é¿ò --> 
+  <!--ÖØÖÃÃÜÂëÄ£×é¿ò --> 
   <div id="reset-password" class="modal fade" tabindex="-1"> 
    <div class="modal-dialog" role="document"> 
     <div class="modal-content"> 
      <div class="modal-header"> 
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span></button> 
-      <h4 class="modal-title">é‡ç½®å¯†ç </h4>
+      <h4 class="modal-title">ÖØÖÃÃÜÂë</h4>
      </div> 
      <div class="modal-body"> 
       <div class="form-horizontal"> 
@@ -286,12 +278,12 @@
       </div> 
      </div> 
      <div class="modal-footer"> 
-      <button id="reset-submit" type="submit" class="btn btn-default">é‡ç½®</button> 
+      <button id="reset-submit" type="submit" class="btn btn-default">ÖØÖÃ</button> 
      </div> 
     </div> 
    </div> 
   </div> 
-  <!--é‡ç½®å¯†ç æ¨¡ç»„æ¡† --> 
+  <!--ÖØÖÃÃÜÂëÄ£×é¿ò --> 
   <script type="text/javascript" src="/js/js-sha256 v0.3.0.js"></script> 
   <script type="text/javascript" src="/js/highlight.pack.js"></script>
   <script type="text/javascript" src="/js/markdown-it.min.js"></script> 
