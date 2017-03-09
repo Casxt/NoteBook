@@ -143,6 +143,7 @@ function() {
                 if (data.state == "success") {
                     setCookie((path == "/") ? "newtitle": "title", "", 0);
                     setCookie((path == "/") ? "newessay": "essay", "", 0);
+                    setCookie((path == "/") ? "newtype": "type", "", 0);
                     document.getElementById("text-submit").className = "btn btn-success";
                     document.getElementById("text-submit").innerHTML = data.state;
                     window.location.href = "/" + cookie_name + $("#text-title").val() + "/";

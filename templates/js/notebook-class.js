@@ -1,3 +1,20 @@
+//////////////////////
+//
+//基础功能函数
+//
+/////////////////////
+function isPhone() {
+    var flag = false;
+    var userAgentInfo = navigator.userAgent;
+    var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
+    for (var i = 0; i < Agents.length; i++) {
+        if (userAgentInfo.indexOf(Agents[i]) > 0) {
+            flag = true;
+            break;
+        }
+    }
+    return flag;
+}
 
 function getCookie(name) {
     var cookieValue = null;
@@ -104,16 +121,16 @@ var Essay = {
         //格式化字符串
         essay.format=FormatEssay;
         //刷新essay显示区
-        essay.show=function(e=null){
+        essay.show=function(e){
             $(essay.outputId).html(e?e:essay.format(essay.get(),essay.type));
         };
         //刷新essay输入区
         essay.updateInput=function(){
             e = essay.get();
-            if (essay.editor == "textarea"){
+            if (essay.editor == "textarea" && e != essay.getEssay()){
                 $(essay.inputId).val(e);
             }
-            else if(essay.editor == "wangEditor"){
+            else if(essay.editor == "wangEditor" && e != essay.getEssay()){
                 essay.wangEditor.$txt.html(e);
             }
         };
@@ -132,6 +149,9 @@ var Essay = {
         essay.setEssay=function(e){
             essay.text = essay.cleanEssay(e);
             essay.updateInput(essay.get());
+        };
+        essay.setEssayWithoutClean=function(e){
+            essay.text = e;
         };
         //隐藏函数供公共函数调用使用
         essay.updateAttribute=function(Attribute,value){
@@ -180,12 +200,18 @@ var Essay = {
         };
         //保存
         essay.saveCookie=function(){
-            let path = window.location.pathname
+            var path = window.location.pathname
             setCookie((path=="/")?"newessay":"essay", escape(essay.get()), 30);
             setCookie((path=="/")?"newtype":"type", escape(essay["type"]), 30);
         };
         //文章变化时执行函数
         essay.oninput = function(){
+            essay.set(essay.getEssay())
+            essay.show();
+            essay.saveCookie();
+        };
+        //文章变化时执行函数
+        essay.onchange = function(){
             essay.set(essay.getEssay())
             essay.show();
             essay.saveCookie();
@@ -201,9 +227,8 @@ var Essay = {
         essay.oninput_hook = function(){};
         essay.attribute_onchange_hook = function(){};
         $(document).on('input',essay.inputId,function(){essay.oninput()});
-        $(document).on('input',
-        essay.typeId+','+essay.passwordId,
-        function(){essay.attribute_onchanget()});
+        $(document).on('change',essay.inputId,function(){essay.onchange()});
+        $(document).on('input',essay.typeId+','+essay.passwordId,function(){essay.attribute_onchanget()});
         return essay;
     }
 };
@@ -243,22 +268,26 @@ var Title = {
             Title.setText(t);
         };
         //刷新title显示区时使用此函数
-        title.show=function(t=null){
+        title.show=function(t){
             $(title.outputId).html(t?t:title.get());
         };
         //刷新title输入区
         title.updateInput=function(){
-            $(title.inputId).val(title.cleanTitle(title.get()));
+            var t = title.get();
+            if (t != title.getTitle()){
+                $(title.inputId).val(t);
+            }
         };
         title.cleanTitle = function(t){
             t = t.replace(/<|>/g, "");
+            t = t.replace(/\s+$/g, "");
             t = t.replace(/^\s+/g, "");
-            t = t.replace(/\s/g, " ");
+            t = t.replace(/\s+/g, " ");
             return t;
         };
         //保存
         title.saveCookie=function(){
-            let path = window.location.pathname
+            var path = window.location.pathname
             setCookie((path=="/")?"newtitle":"title", escape(title.get()), 30);
         };
         //隐藏函数供公共函数调用使用
@@ -267,18 +296,30 @@ var Title = {
             title.text = t;
             title.updateInput();
         };
-        //隐藏函数供公共函数调用使用
+        title.setTitleWithoutClean=function(t){
+            title.text = t;
+        };
         title.getTitle=function(){
             return $(title.inputId).val();
         };
         title.oninput = function(){
-            title.set(title.getTitle())
+            title.setTitleWithoutClean(title.getTitle());
+            title.updateInput();
             title.show();
             title.saveCookie();
         };
-        
-        title.oninput_hook = $(document).on('input',title.inputId,function(){title.oninput()});
-        
+        title.onchange = function(){
+            title.set(title.getTitle());
+            title.show();
+            title.saveCookie();        
+        };
+        if(isPhone()){
+            title.onchange_hook = $(document).on('change',title.inputId,function(){title.onchange()});
+        }else{
+            title.onchange_hook = $(document).on('input',title.inputId,function(){title.oninput()});
+            title.onchange_hook = $(document).on('change',title.inputId,function(){title.onchange()});
+        }
+
         return title;
     }
 };
@@ -290,7 +331,7 @@ var Article = {
             title:Title.createNew("#text-title","#showtitle"),
             essay:Essay.createNew("#text-article","#showarticle","#text-type","#text-password","#text-id","#text-pubtime","#text-lastesttime")
         };
-        article.show=function(t=null,e=null){
+        article.show=function(t,e){
             article.title.show(t);
             article.essay.show(e);
         };

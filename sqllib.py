@@ -99,7 +99,7 @@ def SqlClose(conn,cursor):
 #
 ####################################      
 def CreateUser (uf):#创建用户
-    column = ('uid','name','mail','salt','saltpassword','group','lastfailedtime','time')
+    column = ['uid','name','mail','salt','saltpassword','group','lastfailedtime','time']
     Column = str(column).replace("'","`")
     (conn,cursor) = SqlOpen()
     try:
@@ -156,7 +156,7 @@ def GetUserInfo (ActionInfo):#获取user信息
     
 def GetLoginInfo (ActionInfo):#登录查询用
     #id,uid,name
-    logincolumn=('uid','name','salt','saltpassword','permission','group','lgnfailedtimes','lastfailedtime')
+    logincolumn=['uid','name','salt','saltpassword','permission','group','lgnfailedtimes','lastfailedtime']
     SqlUserField = str(logincolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     sql =  """select """+SqlUserField+""" from """+TABLE["user"]+""" WHERE `name`=%s OR `mail`=%s """
@@ -205,8 +205,8 @@ def ResetPassword (uf):#重置密码
 ####################################
 
 def CreatArticle (ActionInfo):#创建文章
-    Articlecolumn = ('title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime')
-    ArticleColumn = str(Articlecolumn).replace("'","`")
+    Articlecolumn = ['title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime']
+    ArticleColumn = '('+str(Articlecolumn).replace("'","`")[1:-1]+')'
     (conn,cursor) = SqlOpen()
     #获取用户信息,鉴权
     uf = GetName (ActionInfo["uid"],cursor)
@@ -234,7 +234,7 @@ def CreatArticle (ActionInfo):#创建文章
         return True
 
 def EditArticle (ActionInfo):
-    ARTICLEFIELD=('title','essay','type','tag','blgroup','salt','saltpassword','remark')#,'permission'
+    ARTICLEFIELD=['title','essay','type','tag','blgroup','salt','saltpassword','remark']
     #拼接set语句
     SetUpdateColumn = ""
     SetUpdateInfo=[]
@@ -252,7 +252,7 @@ def EditArticle (ActionInfo):
     ActionInfo.update(GetName(ActionInfo['uid'],cursor))
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
     try:
-        ArticleInfo = GetArticleInfo(cursor,ActionInfo['title'],ActionInfo["authorInfo"]["uid"])
+        ArticleInfo = GetArticleInfo(cursor,ActionInfo['rawtitle'],ActionInfo["authorInfo"]["uid"])
     except SqlError as e:
         SqlClose(conn,cursor)
         raise SqlError("EditArticle","No Such Article '%s' Belong to '%s'!!"%(ActionInfo["title"],ActionInfo["author"]),ActionInfo)
@@ -266,9 +266,9 @@ def EditArticle (ActionInfo):
             num = cursor.execute(sql,SetUpdateInfo)
         except pymysql.err.IntegrityError as e:
             if "Duplicate entry" in str(e):
-                raise SqlError("CreatArticle","标题重复",ActionInfo)
+                raise SqlError("EditArticle","标题重复",ActionInfo)
             else:
-                raise SqlError("CreatArticle",traceback.format_exc(),ActionInfo)
+                raise SqlError("EditArticle",traceback.format_exc(),ActionInfo)
         finally:
             SqlClose(conn,cursor)
         return True
@@ -333,7 +333,7 @@ def GetArticle (ActionInfo):#直接获取文章信息
 
 def GetArticleList (ActionInfo):#获取文章列表
     #ActionInfo应有page一项,eachpage,order 升序asc /降序desc
-    Articlecolumn=('id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime')#,'essay'
+    Articlecolumn=['id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime']
     ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     ######
@@ -364,7 +364,7 @@ def GetArticleList (ActionInfo):#获取文章列表
 
 def SearchArticle (ActionInfo):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
     #搜索权限设计？
-    Articlecolumn=('id','name','title','essay','type','permission','blgroup','pubtime','lastesttime')
+    Articlecolumn=['id','name','title','essay','type','permission','blgroup','pubtime','lastesttime']
     ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句

@@ -1,6 +1,12 @@
+//$.getScript("/js/jquery-3.1.1.min.js");
+$.getScript("/js/bootstrap.min.js");
+$.getScript("/js/js-sha256 v0.3.0.js"); 
+$.getScript("/js/wangEditor.min.js");
 $.getScript("/js/notebook-gui.js");
 $.getScript("/js/notebook-class.js");
-$.getScript("/js/notebook-registerchecker.js");
+$.getScript("/js/js-sha256 v0.3.0.js"); 
+$.getScript("/js/highlight.pack.js");
+$.getScript("/js/markdown-it.min.js"); 
 $.getScript("/js/notebook.js");
 $.getScript("/js/notebook-listener.js");
 $.getScript("/js/notebook-test.js");

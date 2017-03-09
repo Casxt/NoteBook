@@ -144,10 +144,10 @@ function checkeurl() {
 }
 //自动加载文章
 function autoloadarticle() {
-    let path = window.location.pathname;
-    let essay = unescape(getCookie((path=="/")?"newessay":"essay"));
-    let title = unescape(getCookie((path=="/")?"newtitle":"title"));
-    let type = unescape(getCookie((path=="/")?"newtype":"type"));
+    var path = window.location.pathname;
+    var essay = unescape(getCookie((path=="/")?"newessay":"essay"));
+    var title = unescape(getCookie((path=="/")?"newtitle":"title"));
+    var type = unescape(getCookie((path=="/")?"newtype":"type"));
     if (type != 'null' && type != "") {
         article.setAttribute("type",type);
     }
@@ -162,12 +162,12 @@ function autoloadarticle() {
 }
 
 function autogetarticle() {
-    let passwords = arguments[0] ? arguments[0] : 0;
-    let path = window.location.pathname;
-    let matchpath2 = /^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
-    let a = matchpath2.exec(path);
-    let cookie_name = unescape(getCookie("name"));
-    let isuser = true;
+    var passwords = arguments[0] ? arguments[0] : 0;
+    var path = window.location.pathname;
+    var matchpath2 = /^\/(([\S\s]+?)\/)?(([\S\s]+?)\/)?$/g; //匹配文章
+    var a = matchpath2.exec(path);
+    var cookie_name = unescape(getCookie("name"));
+    var isuser = true;
     a[2] = decodeURIComponent(a[2]);
     a[4] = decodeURIComponent(a[4]);
     $("#title-editer").hide();
@@ -218,9 +218,9 @@ function autogetarticle() {
                 article.setAttribute("type",data.type);
                 article.setTitle(data.title);
                 article.setEssay(data.essay);
-                let title = article.title.cleanTitle(data.title);
-                let essay = article.essay.cleanEssay(data.essay);
-                let href =  encodeURI(name_path) + encodeURIComponent(title);
+                var title = article.title.cleanTitle(data.title);
+                var essay = article.essay.cleanEssay(data.essay);
+                var href =  encodeURI(name_path) + encodeURIComponent(title);
                 console.log(data.type);
                 article.show(isuser?('<a " href="/e/' + href + '/">' + title + '</a>'):title,
                             article.essay.format(essay,data.type));
@@ -263,6 +263,7 @@ function GetArticleList() { //获取文章列表
         postdata = {
             'mode':'GetArticleList',
             'name': cookie_name,
+            //'author':name,
             "page":page,
             'order':'DESC'
         }
@@ -363,10 +364,10 @@ function EditArticle() {
             dataType: 'json',
             success: function(data) {
                 if (data.state=="success"){//有该文章
-                    let title = data.title;
-                    let essay = data.essay;
-                    let edittitle = unescape(getCookie("title"))
-                    let editessay = unescape(getCookie("essay"))
+                    var title = data.title;
+                    var essay = data.essay;
+                    var edittitle = unescape(getCookie("title"))
+                    var editessay = unescape(getCookie("essay"))
                     if (!edittitle || edittitle == "null" ){
                         
                         edittitle = title;
@@ -400,20 +401,21 @@ function EditArticle() {
 }
 //搜索事件
 function SearchArticle() {
-    let path = window.location.pathname;
-    let matchpath2 = /(^\/s(earch)?\/(([\S\s]{0,}?)\/?))$/g; //匹配文章
-    let a = matchpath2.exec(path);
-    let KeyWord = decodeURIComponent(a[4]);
+    var path = window.location.pathname;
+    var matchpath2 = /(^\/s(earch)?\/(([\S\s]{0,}?)\/?))$/g; //匹配文章
+    var a = matchpath2.exec(path);
+    var KeyWord = decodeURIComponent(a[4]);
+    var cookie_name = unescape(getCookie("name"));
     if (CheckSearchInput(KeyWord)){
         //
     }else{
         return false;
     }
-    let html = document.getElementById("listshower");
-    let keyword = KeyWord;
+    var html = document.getElementById("listshower");
+    var keyword = KeyWord;
     $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
     document.getElementById("search-warning").innerHTML = "Loading...";
-    let res = "aa";
+    var res = "aa";
     $.ajax({
         beforeSend: function(request) {
             request.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
@@ -423,6 +425,7 @@ function SearchArticle() {
         data: {
             'mode':"SearchArticle",
             'keyword': keyword,
+            'author': cookie_name,
             'name': getCookie("name")
         },
         dataType: 'json',
@@ -481,7 +484,7 @@ function ArticleListFadeIn(list,i,num){
 
 //检查搜索框
 function CheckSearchInput(word) {
-    let len = word.replace(/\s/g, "").length;
+    var len = word.replace(/\s/g, "").length;
     if (len < MINSEARCHLENGTH) {
         $('#search-warning').fadeIn(SEARCHWARNINGFADETIME);
         document.getElementById("search-warning").innerHTML = "至少"+MINSEARCHLENGTH+"个字";
@@ -527,21 +530,21 @@ function logout() {
 
 //检查注册字符
 function CheckRegisterName(name) {
-    let matchname = /^[a-zA-Z][0-9a-zA-Z@.\-]{4,29}$/g;
+    var matchname = /^[a-zA-Z][0-9a-zA-Z@.\-]{4,29}$/g;
     if (matchname.test(name)) {
         return true;
     }
     return false;
 }
 function CheckRegisterMail(mail) {
-    let matchemail = /^[0-9a-zA-Z][0-9a-zA-Z\-]{0,}@[0-9a-zA-Z\.\-]+?\.[a-zA-Z\.]+[a-zA-Z]$/g;
+    var matchemail = /^[0-9a-zA-Z][0-9a-zA-Z\-]{0,}@[0-9a-zA-Z\.\-]+?\.[a-zA-Z\.]+[a-zA-Z]$/g;
     if (matchemail.test(mail)) {
         return true;
     }
     return false;
 }
 function CheckRegisterPassword(passwords) {
-    let matchepassword = /^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,128}$/g;
+    var matchepassword = /^[0-9a-zA-Z@.\-\_\#\$\^\&\*]{6,128}$/g;
     if (matchepassword.test(passwords)) {
         return true;
     }

@@ -85,7 +85,7 @@ def CheckUser(uf):#检查用户能否登录
 def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
 
     try:
-        ActionInfo = CheckParamet(["name","author","title","mode"],ActionInfo)
+        ActionInfo = CheckParamet(("title","mode"),ActionInfo,("author","name"))
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"Paramet Error","essay":e.err,"state":"Failed"})
@@ -214,7 +214,7 @@ def DeleteArticleByNameTitle (ActionInfo):
 def GetArticleList(ActionInfo):
 
     try:
-        ActionInfo = CheckParamet(["uid","name","author"],ActionInfo,["page","eachpage","order"])
+        ActionInfo = CheckParamet(["uid","name"],ActionInfo,["page","eachpage","order","author"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -279,7 +279,7 @@ def GetSpiderArticleList(list,user):
 def SearchArticleList(ActionInfo):
 
     try:
-        ActionInfo = CheckParamet(["uid","name","author","keyword"],ActionInfo,["page","eachpage","order"])
+        ActionInfo = CheckParamet(("uid","name","keyword"),ActionInfo,("page","eachpage","order","author"))
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -533,61 +533,81 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
         "mode":CheckMode
     }
     ResInfo = {}
-    if "name" in ParametKeySet:#必须有name字段，登录验证由session处理
-        if  "name" not in ActionInfo:
-            ActionInfo["name"]=PUBLICUSER
-            ActionInfo["uid"]=PUBLICUSER
+    
+    if "essay" in ParametKeySet:#必须有name字段，登录验证由session处理
+        if CheckFunction["essay"](ActionInfo["essay"]) is True:
+            ResInfo["essay"] = ActionInfo["essay"]
+            ParametKeySet.remove("essay")
         else:
+            raise NoteError("CheckParamet","IllLegal Paramet 'essay'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                
+    if "name" in ParametKeySet:#必须有name字段，登录验证由session处理
+        if  "name" in ActionInfo: 
             if CheckFunction["name"](ActionInfo["name"].lower()) is True:
                 ResInfo["name"] = ActionInfo["name"].lower()
                 ParametKeySet.remove("name")
             else:
-                #if "name" not in OptionalParametKeySet:
-                raise NoteError("CheckParamet","IllLegal Paramet 'name':'%s'"%(ActionInfo["name"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
-    
-    if "author" in ParametKeySet:
-        if  "author" not in ActionInfo:
-            ActionInfo["author"]=PUBLICUSER
+                raise NoteError("CheckParamet","IllLegal Paramet 'name':'%s'"%(ActionInfo["author"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         else:
+            if "name" in OptionalParametKeySet:
+                ActionInfo["name"]=PUBLICUSER
+                ActionInfo["uid"]=PUBLICUSER
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'name'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                
+    if "author" in ParametKeySet:
+        if  "author" in ActionInfo:
             if CheckFunction["author"](ActionInfo["author"].lower()) is True:
                 ResInfo["author"] = ActionInfo["author"].lower()
                 ParametKeySet.remove("author")
             else:
-                #if "author" not in OptionalParametKeySet:
                 raise NoteError("CheckParamet","IllLegal Paramet 'author':'%s'"%(ActionInfo["author"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        else:
+            if "author" in OptionalParametKeySet:
+                ActionInfo["author"]=PUBLICUSER
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'author'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
     
     if "group" in ParametKeySet:
-        if  "group" not in ActionInfo:
-            ActionInfo["group"]=DEFAULT_GROUP
-        else:
+        if  "group" in ActionInfo:
             if CheckFunction["group"](ActionInfo["group"]) is True:
                 ResInfo["group"] = ActionInfo["group"]
                 ParametKeySet.remove("group")
             else:
-                if "group" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'group':'%s'"%(ActionInfo["group"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'group':'%s'"%(ActionInfo["group"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        else:
+            if "group" in OptionalParametKeySet:
+                ActionInfo["group"]=DEFAULT_GROUP
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'group'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
     
     if "mail" in ParametKeySet:
-        if  "mail" not in ActionInfo:
-            raise NoteError("CheckParamet","Missing Paramet %s"%(str(e)),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
-        else:
+        if  "mail" in ActionInfo:
             if CheckFunction["mail"](ActionInfo["mail"].lower()) is True:
                 ResInfo["mail"] = ActionInfo["mail"].lower()
                 ParametKeySet.remove("mail")
             else:
-                if "mail" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'mail':'%s'"%(ActionInfo["mail"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'mail':'%s'"%(ActionInfo["mail"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        else:
+            if "mail" in OptionalParametKeySet:
+                raise NoteError("CheckParamet","Missing Paramet %s"%(str(e)),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+            else:
+                raise NoteError("CheckParamet","Missing Paramet %s"%(str(e)),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
                     
     if "uid" in ParametKeySet:#必须有name字段，登录验证由session处理
-        if  "uid" not in ActionInfo:
-            raise NoteError("CheckParamet","Need to Login")
-        else:
+        if  "uid" in ActionInfo:
             if CheckFunction["uid"](ActionInfo["uid"]) is True:
                 ResInfo["uid"] = ActionInfo["uid"]
                 ParametKeySet.remove("uid")
             else:
-                if "uid" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'uid'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'uid'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        else:
+            if "uid" in OptionalParametKeySet:
+                raise NoteError("CheckParamet","Need to Login")
+                #要不要允许默认值?
+            else:
+                raise NoteError("CheckParamet","Need to Login")
+
 
     if "page" in ParametKeySet:
         if "page" in ActionInfo:
@@ -595,21 +615,25 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
                 ResInfo["page"] = int(ActionInfo["page"])
                 ParametKeySet.remove("page")
             else:
-                if "page" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'page':'%s'"%(ActionInfo["page"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'page':'%s'"%(ActionInfo["page"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         else:
-            ResInfo["page"] = 1
-        
+            if "page" in OptionalParametKeySet:
+                ResInfo["page"] = 1
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'page'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+
     if "eachpage" in ParametKeySet:
         if "eachpage" in ActionInfo:
             if CheckFunction["eachpage"](ActionInfo["eachpage"]) is True:
                 ResInfo["eachpage"] = int(ActionInfo["eachpage"])
                 ParametKeySet.remove("eachpage")
             else:
-                if "eachpage" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'eachpage':'%s'"%(ActionInfo["eachpage"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'eachpage':'%s'"%(ActionInfo["eachpage"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         else:
-            ResInfo["eachpage"] = EACHPAGENUM
+            if "eachpage" in OptionalParametKeySet:
+                ResInfo["eachpage"] = EACHPAGENUM
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'eachpage'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
 
     if "order" in ParametKeySet:
         if "order" in ActionInfo:
@@ -617,28 +641,27 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
                 ResInfo["order"] = ActionInfo["order"]
                 ParametKeySet.remove("order")
             else:
-                if "order" not in OptionalParametKeySet:
-                    raise NoteError("CheckParamet","IllLegal Paramet 'order':'%s'"%(ActionInfo["eachpage"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                raise NoteError("CheckParamet","IllLegal Paramet 'order':'%s'"%(ActionInfo["order"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         else:
-            ResInfo["order"] = "DESC"
+            if "order" in OptionalParametKeySet:
+                ResInfo["order"] = "DESC"
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'order'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
             
     for Key in ParametKeySet:
         try:
             if CheckFunction[Key](ActionInfo[Key]) is True:
                 ResInfo[Key] = ActionInfo[Key]
             else:
-                if Key!="eaasy":
+                if Key!="essay":
                     raise NoteError("CheckParamet","IllLegal Paramet '%s':'%s'"%(Key,ActionInfo[Key]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
                 else:
                     raise NoteError("CheckParamet","IllLegal Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
         except KeyError as e:
-            if Key not in OptionalParametKeySet:
+            if Key in OptionalParametKeySet:
+                pass
+            else:
                 raise NoteError("CheckParamet","Missing Paramet '%s'"%(Key),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
-        # except Exception as e:
-            # print(traceback.format_exc())
-            # Info = {"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet}
-            # logger.Record("ERROR",str(e),{"Function":"CheckParamet","Info":Info,"Detial":traceback.format_exc()})
-            # raise NoteError("CheckParamet","CheckParamet UnknowErr",Info)
             
     return (ResInfo)
         
