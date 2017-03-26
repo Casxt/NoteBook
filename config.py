@@ -1,9 +1,9 @@
 SQLCONFIG={'host':'',#默认127.0.0.1
         'user':'',
         'password':'',
-        'port':3306 ,#默认即为3306
+        'port':3306,#默认即为3306
         'database':'',
-        'charset':'utf8'#默认即为utf8
+        'charset':'UTF8'#默认即为utf8
         }
 TABLE= {'user':'Note_user',
         'article':'Note_article',
@@ -53,7 +53,7 @@ MODE_LIST=("edit","CheckLoginState","GetArticle",
 #######################
 
 #邮件发送地址
-MAIL_FROM_ADDR = "maple@forer.cn"
+MAIL_FROM_ADDR = ""
 #smtp服务器密码
 MAIL_PASSWORD = ''
 #收件地址

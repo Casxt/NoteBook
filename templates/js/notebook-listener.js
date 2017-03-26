@@ -159,7 +159,7 @@ function() {
 //监控跳转
 $(document).on('click', '.article-list-item',
 function() { //提交文章
-    let href = $(this).attr('href');
+    var href = $(this).attr('href');
     if (href && href!="" && href!="undefined"){
         window.location.href = href;
     }    
@@ -168,7 +168,7 @@ function() { //提交文章
 //监控编辑按钮
 $(document).on('click', '.article-edit',
 function() { //提交文章
-    let href = $(this).parent().parent().attr("href");
+    var href = $(this).parent().parent().attr("href");
     //清空herf防止跳转
    $(this).parent().parent().attr("href","");
     window.location.href = '/e'+href;

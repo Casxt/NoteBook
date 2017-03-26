@@ -35,7 +35,9 @@ def Record(Level,Summary,Detial,Addition=0):
         "name":LoggerName,
         "author":LoggerName,
         "uid":LoggerId,
+        "articlegroup":"LoggerArticleGroup"
         }
+
     if LogLevel[Level] >= RecordLevel:
         try:
             ArticleInfo["essay"] = json.dumps(Detial)

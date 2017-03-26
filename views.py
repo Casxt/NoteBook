@@ -21,6 +21,7 @@ def CheckLogin(request):
         if ("uid" in request.session) and ("name" in request.session):#是否需要验证客户端cookie？
             ActionInfo["loginstate"]=1
             ActionInfo["name"]=request.session["name"]
+            ActionInfo["permissions"]=request.session["permissions"]
         else:
             ActionInfo["loginstate"]=0
         ActionInfo["state"]="success"
@@ -34,6 +35,7 @@ def submitarticle(request):
         if ("name" in ActionInfo) and ActionInfo["name"]!="" and ActionInfo["name"]!=None:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
+                ActionInfo["permissions"]=request.session["permissions"]
                 info = Note.SubmitArticle(ActionInfo)
                 return HttpResponse(json.dumps(info))
             else:
@@ -53,7 +55,7 @@ def editarticle(request):
         if ("name" in ActionInfo) and ActionInfo["name"]!=""  and ActionInfo["name"]!=None:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)
             if logined:
-                pass
+                ActionInfo["permissions"]=request.session["permissions"]
             else:
                 del ActionInfo['name']
             info = Note.EditArticle(ActionInfo)
@@ -71,6 +73,7 @@ def deletearticle(request):
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)#
         if logined:
+            ActionInfo["permissions"]=request.session["permissions"]
             state = Note.DeleteArticleByNameTitle(ActionInfo)
             return HttpResponse(json.dumps(state))
         return HttpResponse(json.dumps({"state":"Name err"}))
@@ -81,7 +84,9 @@ def getarticle(request,keyword=None):
     if request.is_ajax() and request.method == 'POST':
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
-        if not logined:
+        if logined:
+            ActionInfo["permissions"]=request.session["permissions"]
+        else:
             ActionInfo.pop('name',None)
         article = Note.GetArticle(ActionInfo)
         return HttpResponse(json.dumps(article))
@@ -100,7 +105,9 @@ def getarticlelist(request):
         
         if "name" in ActionInfo:
             (ActionInfo,logined) = checklogininfo(request,ActionInfo)#未登录会返回公共列表
-            if not logined:
+            if logined:
+                ActionInfo["permissions"]=request.session["permissions"]
+            else:
                 ActionInfo.pop("name",None)
                 logout(request)
                 
@@ -140,6 +147,7 @@ def searcharticle(request):
         ActionInfo = getpost(request)
         (ActionInfo,logined) = checklogininfo(request,ActionInfo)
         if logined:
+            ActionInfo["permissions"]=request.session["permissions"]
             state = Note.SearchArticleList(ActionInfo)#articlelist是数组
             return HttpResponse(json.dumps(state)) 
     return render(request, 'note_index.html')
@@ -160,8 +168,9 @@ def ChangePassword(request):
     if request.is_ajax() and request.method == 'POST':
     #uf should have ('name',"password","newpassword")
         ActionInfo = getpost(request)
-        (ActionInfo,iflogin)=checklogininfo(request,ActionInfo)
-        if iflogin:
+        (ActionInfo,logined)=checklogininfo(request,ActionInfo)
+        if logined:
+            ActionInfo["permissions"]=request.session["permissions"]
             state = Note.ChangeUserPassword(ActionInfo)
             return HttpResponse(json.dumps(state)) 
         else:
@@ -171,7 +180,7 @@ def ChangePassword(request):
 def logout(request):
     print(request.META['HTTP_X_FORWARDED_FOR'])
     request.session.pop("name","del name failed")
-    request.session.pop("permissions","del password failed")
+    request.session.pop("permissions","del permissions failed")
     request.session.pop("uid","del uid failed")
     if request.is_ajax() and request.method == 'GET':
         return HttpResponse('{"info":"success"}')  

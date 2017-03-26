@@ -6,7 +6,9 @@ Inf = math.inf
 #LowerGroup
 #All
 USER_PERMISSIONS=("Weight","DispitePass","ReadArticle","ReadArticleList","CreateArticle","DeleteArticle","EditArticle","SearchArticle","MaxArticleNum")
+ARTICLE_PERMISSIONS=("Weight")
 DEFAULT_GROUP = "Default"
+DEFAULT_ARTICLE_GROUP = "DefaultArticleGroup"
 ####################################
 #
 #默认用户组
@@ -14,13 +16,16 @@ DEFAULT_GROUP = "Default"
 #################################### 
 DEFAULTGROUP={
 "Weight":10,
-"ReadArticle":("Self","LowerGroup"),
+"ReadArticle":("Self","LowerGroup","SameGroup"),
 "ReadArticleList":("Self","PublicUser"),
 "CreateArticle":("Self"),
 "DeleteArticle":("Self"),
 "EditArticle":("Self","PublicUser"),
 "SearchArticle":("Self","PublicUser"),
 "MaxArticleNum":100
+}
+DEFAULTARTICLEGROUP={
+"Weight":10
 }
 ####################################
 #
@@ -29,9 +34,13 @@ DEFAULTGROUP={
 #################################### 
 VIPGROUP = dict(DEFAULTGROUP)
 VIPGROUP.update({
-"Weight":10,
+"Weight":20,
 "ReadArticle":("LowerGroup"),
 "MaxArticleNum":1000
+})
+VIPARTICLEGROUP= dict(DEFAULTARTICLEGROUP)
+VIPARTICLEGROUP.update({
+"Weight":20
 })
 ####################################
 #
@@ -48,6 +57,10 @@ ADMINGROUP.update({
 "EditArticle":("LowerGroup"),
 "SearchArticle":("LowerGroup"),
 "MaxArticleNum":9999999,
+})
+ADMINARTICLEGROUP = dict(VIPARTICLEGROUP)
+ADMINARTICLEGROUP.update({
+"Weight":100
 })
 ####################################
 #
@@ -66,6 +79,10 @@ MANAGEGROUP.update({
 "SearchArticle":("All"),
 "MaxArticleNum":Inf,
 })
+MANAGEARTICLEGROUP = dict(ADMINARTICLEGROUP)
+MANAGEARTICLEGROUP.update({
+"Weight":Inf
+})
 ####################################
 #
 #日志用户组(ADMINGROUP)
@@ -83,5 +100,10 @@ LOGGERGROUP.update({
 "SearchArticle":("Self"),
 "MaxArticleNum":50,
 })
+LOGGERARTICLEGROUP = dict(DEFAULTARTICLEGROUP)
+LOGGERARTICLEGROUP.update({
+"Weight":ADMINARTICLEGROUP["Weight"]
+})
 #Keep this line on the buttom
 USER_GROUP={"Default":DEFAULTGROUP,"Vip":VIPGROUP,"Admin":ADMINGROUP,"Manage":MANAGEGROUP,"Logger":LOGGERGROUP}
+ARTICLE_GROUP={"DefaultArticleGroup":DEFAULTARTICLEGROUP,"VipArticleGroup":VIPARTICLEGROUP,"AdminArticleGroup":ADMINARTICLEGROUP,"ManageArticleGroup":MANAGEARTICLEGROUP,"LoggerArticleGroup":LOGGERARTICLEGROUP}

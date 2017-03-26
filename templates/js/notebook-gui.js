@@ -202,8 +202,8 @@ function CloseWangEditor(essay){
 /////////////////////
 function CheckArticle() //设置提交按钮状态
 {
-    let essay = article.getEssay();
-    let title = article.getTitle();
+    var essay = article.getEssay();
+    var title = article.getTitle();
     if (essay.length >= MINESSAYLENGTH && essay.length <= MAXESSAYLENGTH && title.length >= MINTITLELENGTH && title.length <= MAXTITLELENGTH) {
         $("#text-submit,#text-edit-submit").removeAttr("disabled");
         $("#text-submit,#text-edit-submit").attr("class","btn btn-primary");

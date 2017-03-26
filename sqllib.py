@@ -36,6 +36,17 @@ def MixPermission(Group, Addition):
     if Addition is None:
         return per
     else:
+        Addition = json.loads(Addition)
+        per.update(Addition)
+    return per
+
+def MixArticlePermission(Group, Addition):
+    if Group is None or Group not in ARTICLE_GROUP:    
+        Group = DEFAULT_ARTICLE_GROUP
+    per  = dict(ARTICLE_GROUP[Group])
+    if Addition is None:
+        return per
+    else:
         Addition  = json.loads(Addition)
         per.update(Addition)
     return per
@@ -47,8 +58,8 @@ def GetUserPermission (cursor,uid):
     cursor.execute(UserSql,(uid))
     value = cursor.fetchone()
     if value is not None:
-        permission = dict(map(lambda x,y:[x,y],UserColumn,value))
-        per = MixPermission(permission["group"],permission["permission"])
+        Userinfo = dict(map(lambda x,y:[x,y],UserColumn,value))
+        per = MixPermission(Userinfo["group"],Userinfo["permission"])
         return per
     elif value is None:
         raise SqlError("GetUserPermission","No Such Uid %s"%(uid))
@@ -56,7 +67,7 @@ def GetUserPermission (cursor,uid):
         raise SqlError("GetUserPermission","Unknow Error")
         
 def GetArticleInfo (cursor,title,uid):
-    ArticleColumn = ('id','uid','name','blgroup','permission')
+    ArticleColumn = ('id','uid','name','group','permission')
     SqlArticleField = str(ArticleColumn).replace("'","`")[1:-1]
     if not title.isdigit():
         Sql =  """select """+SqlArticleField+""" from """+TABLE["article"]+""" WHERE `title`=%s AND `uid`=%s"""
@@ -66,12 +77,9 @@ def GetArticleInfo (cursor,title,uid):
     value = cursor.fetchone()
     if value is not None:
         ArticleInfo = dict(map(lambda x,y:[x,y],ArticleColumn,value))
-        if ArticleInfo["permission"] is None:
-            ArticleInfo["permission"] = {}
-        else:
-            ArticleInfo["permission"] = json.loads(ArticleInfo["permission"])
+        per = MixArticlePermission(ArticleInfo["group"],ArticleInfo["permission"])
         UserPermission = GetUserPermission(cursor,ArticleInfo["uid"])
-        UserPermission.update(ArticleInfo["permission"])
+        UserPermission.update(per)
         ArticleInfo["permissions"] = UserPermission
     else:
         raise SqlError("GetArticleInfo","No Such Article %s"%(title))
@@ -205,7 +213,8 @@ def ResetPassword (uf):#重置密码
 ####################################
 
 def CreatArticle (ActionInfo):#创建文章
-    Articlecolumn = ['title','uid','name','essay','type','tag','permission','blgroup','salt','saltpassword','remark','pubtime','lastesttime']
+    #{"Weight": 100,"ReadArticleList":["Self"],"MaxArticleNum": 50,"ReadArticle": ["Self"]}
+    Articlecolumn = ['title','uid','name','essay','type','tag','permission','group','salt','saltpassword','remark','pubtime','lastesttime']
     ArticleColumn = '('+str(Articlecolumn).replace("'","`")[1:-1]+')'
     (conn,cursor) = SqlOpen()
     #获取用户信息,鉴权
@@ -216,14 +225,22 @@ def CreatArticle (ActionInfo):#创建文章
     ActionInfo.update(uf)
     ActionInfo["authorInfo"] = GetUid(ActionInfo['author'],cursor)
     Per = Permission.CreateArticle(ActionInfo,ActionInfo["authorInfo"])
-    if Per is True:
+    if "articlepermissions" in ActionInfo:
+        ArticlePer = Permission.SetArticlePermissions(ActionInfo,ActionInfo["articlepermissions"])
+    else:
+        ArticlePer = True
+    if "articelgroup" in ActionInfo:
+        ArticleGroupPer = Permission.SetArticlePermissionGroup(ActionInfo,ActionInfo["articelgroup"])
+    else:
+        ArticleGroupPer = True
+    if Per is True and ArticlePer is True and ArticleGroupPer is True:
         try:
             #创建文章
             ArticleSql = """insert into """+TABLE["article"]+""" """+ArticleColumn+""" values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())"""
-            cursor.execute(ArticleSql,(ActionInfo["title"],ActionInfo["authorInfo"]["uid"],ActionInfo["name"],ActionInfo["essay"],ActionInfo.get("type",DEFAULTARTICLETYPE),ActionInfo.get("tag",None),ActionInfo.get("permission",None),ActionInfo.get("blgroup",None),ActionInfo.get("salt",None),ActionInfo.get("saltpassword",None),ActionInfo.get("remark",None)))
+            cursor.execute(ArticleSql,(ActionInfo["title"],ActionInfo["authorInfo"]["uid"],ActionInfo["name"],ActionInfo["essay"],ActionInfo.get("type",DEFAULTARTICLETYPE),ActionInfo.get("tag",None),ActionInfo.get("articlepermissions",None),ActionInfo.get("articlegroup",None),ActionInfo.get("salt",None),ActionInfo.get("saltpassword",None),ActionInfo.get("remark",None)))
             #若上句执行错误则不会执行下句
             UserSql = """update """+TABLE["user"]+""" set `articlenum`=(`articlenum`+1) where `uid`=%s"""
-            cursor.execute(UserSql,(ActionInfo["uid"]))
+            cursor.execute(UserSql,(ActionInfo["authorInfo"]["uid"]))
         except pymysql.err.IntegrityError as e:
             if "Duplicate entry" in str(e):
                 raise SqlError("CreatArticle","User:'%s' Duplicate entry Title"%ActionInfo["name"],ActionInfo)
@@ -234,7 +251,7 @@ def CreatArticle (ActionInfo):#创建文章
         return True
 
 def EditArticle (ActionInfo):
-    ARTICLEFIELD=['title','essay','type','tag','blgroup','salt','saltpassword','remark']
+    ARTICLEFIELD=['title','essay','type','tag','group','salt','saltpassword','remark']
     #拼接set语句
     SetUpdateColumn = ""
     SetUpdateInfo=[]
@@ -294,7 +311,7 @@ def DeleteArticleByNameTitle (ActionInfo):#必须登陆后才能删除，必须�
         return values
         
 def GetArticle (ActionInfo):#直接获取文章信息
-    Articlecolumn=('id','uid','name','title','essay','type','tag','permission','blgroup','pubtime','lastesttime','salt','saltpassword')
+    Articlecolumn=('id','uid','name','title','essay','type','tag','permission','group','pubtime','lastesttime','salt','saltpassword')
     ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     ######
@@ -333,7 +350,7 @@ def GetArticle (ActionInfo):#直接获取文章信息
 
 def GetArticleList (ActionInfo):#获取文章列表
     #ActionInfo应有page一项,eachpage,order 升序asc /降序desc
-    Articlecolumn=['id','name','title','type','tag','saltpassword','permission','blgroup','pubtime','lastesttime']
+    Articlecolumn=['id','name','title','type','tag','saltpassword','permission','group','pubtime','lastesttime']
     ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     (conn,cursor) = SqlOpen()
     ######
@@ -364,7 +381,7 @@ def GetArticleList (ActionInfo):#获取文章列表
 
 def SearchArticle (ActionInfo):#简单搜索#必须保证搜索词为关键词用单个空格分开的形式
     #搜索权限设计？
-    Articlecolumn=['id','name','title','essay','type','permission','blgroup','pubtime','lastesttime']
+    Articlecolumn=['id','name','title','essay','type','permission','group','pubtime','lastesttime']
     ArticleColumn = str(Articlecolumn).replace("'","`")[1:-1]
     ######
     #拼接索搜语句
@@ -426,7 +443,7 @@ def DefineArticleTable ():#文章表
             `type`  varchar(40) CHARACTER SET utf8 NOT NULL ,
             `tag`  text CHARACTER SET utf8 NULL ,
             `permission`  text CHARACTER SET utf8 NULL ,
-            `blgroup`  varchar(255) CHARACTER SET utf8 NULL ,
+            `group`  varchar(255) CHARACTER SET utf8 NULL ,
             `salt`  text CHARACTER SET utf8 NULL ,
             `saltpassword`  text CHARACTER SET utf8 NULL ,
             `remark`  text CHARACTER SET utf8 NULL ,
@@ -435,7 +452,7 @@ def DefineArticleTable ():#文章表
             UNIQUE KEY(`uid`, `title`) ,
             INDEX (`uid`),
             INDEX (`title`),
-            INDEX (`blgroup`),
+            INDEX (`group`),
             FOREIGN KEY (`uid`) REFERENCES `"""+TABLE["user"]+"""` (`uid`),
             PRIMARY KEY (`id`)
             )"""
@@ -451,12 +468,12 @@ def DefineArticleSearchTable ():#文章查询表
             `b64essay`  longtext CHARACTER SET utf8 NOT NULL ,
             `b64tag`  text CHARACTER SET utf8 NULL ,
             `permission`  int DEFAULT 0,
-            `blgroup`  varchar(255) CHARACTER SET utf8 NULL ,
+            `group`  varchar(255) CHARACTER SET utf8 NULL ,
             `b64remark`  text CHARACTER SET utf8 NULL ,
             `pubtime`  datetime NOT NULL ,
             `lastesttime`  datetime NOT NULL ,
             INDEX (`uid`),
-            INDEX (`blgroup`),
+            INDEX (`group`),
             FULLTEXT (`b64title`),
             FULLTEXT (`b64essay`),
             FULLTEXT (`b64tag`),

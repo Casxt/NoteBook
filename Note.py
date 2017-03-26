@@ -134,9 +134,8 @@ def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文�
 
         
 def SubmitArticle(ActionInfo):
-    
     try:
-        ActionInfo = CheckParamet(["uid","name","author","title","essay","type"],ActionInfo)
+        ActionInfo = CheckParamet(["uid","name","author","title","essay","type"],ActionInfo,["articlepermissions","articlegroup"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -146,11 +145,8 @@ def SubmitArticle(ActionInfo):
     
     #检查文章种类
     try:
-        if CheckTitle(ActionInfo["title"]):
-            sqllib.CreatArticle (ActionInfo)
-            return({"state":"success"})
-        else:
-            return({"state":"Title Err"})
+        sqllib.CreatArticle (ActionInfo)
+        return({"state":"success"})
     except (SqlError,PermissionError) as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -214,7 +210,7 @@ def DeleteArticleByNameTitle (ActionInfo):
 def GetArticleList(ActionInfo):
 
     try:
-        ActionInfo = CheckParamet(["uid","name"],ActionInfo,["page","eachpage","order","author"])
+        ActionInfo = CheckParamet(["uid"],ActionInfo,["name","page","eachpage","order","author"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -315,10 +311,6 @@ def CreateUser(ActionInfo):#生成用户，生成uid，生成盐
         logger.Record("ERROR",str(e),{"Function":"SearchArticleList","Info":ActionInfo,"Detial":traceback.format_exc()})
         return ({'state':"SearchArticleList UnKnowErr"})
     
-    #ActionInfo should have ('uid','name','mail','salt','saltpassword')
-    #ActionInfo["name"] = ActionInfo["name"].lower()
-    #ActionInfo["mail"] = ActionInfo["mail"].lower()
-    
     t = str(int(time.time()))
     #生成salt
     salt = hashlib.sha256()
@@ -410,20 +402,6 @@ def ReCreateUserPassword(ActionInfo):#重置密码用户名
     else:
         return {'state':"Mail Not Match"}
 
-# def CleanTitle(Title):
-    # Title = re.sub(r'\s',' ', Title)
-    # Title.replace("<","").replace(">","")
-    # return Title
-
-# def CleanArticle(Article):
-    # Article.replace("<script","").replace("script>","")
-    # Article.replace("<iframe","").replace("iframe>","")
-    # Article.replace("<link","")
-    # Article.replace("<style","").replace("style>","")
-    # Article.replace("<frameset","").replace("frameset>","")
-    # return Article
-
-        
 def CheckUserName(Name):#检查用户名是否合法
     s = r'^[a-zA-Z][0-9a-zA-Z@.\-]{4,29}$'
     if re.match(s, Name):
@@ -508,8 +486,22 @@ def CheckMode(Mode):
     if Mode in MODE_LIST:
         return True
     else:
-        return False    
-        
+        return False   
+#####
+def CheckArticlePermissions(ArticlePermissions):
+    for key in ArticlePermissions:
+        if(key in ARTICLE_PERMISSIONS):#允许的文章权限表
+            pass
+        else:
+            return False
+    return True
+
+def CheckArticleGroup(ArticleGroup):
+    if(ArticleGroup in ARTICLE_GROUP):#允许的文章权限表
+        return True
+    else:
+        return False
+    
 def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
     ParametKeySet = set(ParametKeyList+OptionalParametKeyList)
     OptionalParametKeySet = set(OptionalParametKeyList)
@@ -530,6 +522,8 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
         "eachpage":CheckArticleListEachPage,
         "order":CheckArticleListOrder,
         "id":CheckArticleId,
+        "articlepermissions":CheckArticlePermissions,
+        "articlegroup":CheckArticleGroup,
         "mode":CheckMode
     }
     ResInfo = {}
@@ -647,7 +641,22 @@ def CheckParamet(ParametKeyList,ActionInfo,OptionalParametKeyList=[]):
                 ResInfo["order"] = "DESC"
             else:
                 raise NoteError("CheckParamet","Missing Paramet 'order'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
-            
+          
+    if "articlegroup" in ParametKeySet:
+        if "articlegroup" in ActionInfo:
+            if CheckFunction["articlegroup"](ActionInfo["articlegroup"]) is True:
+                ResInfo["articlegroup"] = ActionInfo["articlegroup"]
+                ParametKeySet.remove("articlegroup")
+            else:
+                raise NoteError("CheckParamet","IllLegal articlegroup 'articlegroup':'%s'"%(ActionInfo["articlegroup"]),{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+        else:
+            if "articlegroup" in OptionalParametKeySet:
+                #设置articleGroup
+                ResInfo["articlegroup"] = DEFAULT_ARTICLE_GROUP
+                pass
+            else:
+                raise NoteError("CheckParamet","Missing Paramet 'articlegroup'",{"ActionInfo":ActionInfo,"ParametKeySet":ParametKeySet})
+                
     for Key in ParametKeySet:
         try:
             if CheckFunction[Key](ActionInfo[Key]) is True:
