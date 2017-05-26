@@ -108,7 +108,7 @@ def SqlClose(conn,cursor):
 ####################################      
 def CreateUser (uf):#创建用户
     column = ['uid','name','mail','salt','saltpassword','group','lastfailedtime','time']
-    Column = str(column).replace("'","`")
+    Column = "("+str(column).replace("'","`")[1:-1]+")"
     (conn,cursor) = SqlOpen()
     try:
         sql =   """insert into """+TABLE["user"]+""" """+Column+""" values (%s,%s,%s,%s,%s,now(),now())"""

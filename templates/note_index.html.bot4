@@ -2,15 +2,18 @@
 <html lang="zh-CN">
  <head> 
   <meta charset="UTF-8" /> 
+  <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge" /> 
   <meta name="viewport" content="width=device-width, initial-scale=1" /> 
   <title>Note</title> 
+  <script src="https://cdn.bootcss.com/popper.js/1.9.3/umd/popper.min.js" integrity="sha384-knhBOwpf8/28D6ygAjJeb0STNDZqfPbKaWQ8wIz/xgSc0xXwKsKhNype8fmfMka2" crossorigin="anonymous"></script>
+  <script src="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
   <link rel="stylesheet" type="text/css" href="/css/wangEditor.min.css">
   <link rel="stylesheet" href="/css/highlight/styles/monokai-sublime.css">
-  <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
+  <script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
   <!-- <script type="text/javascript" src="/js/notebook-loader.js"></script> -->
-  <!--  --><script type="text/javascript" src="/js/bootstrap.min.js"></script>
-       <link href="/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+       <link href="/css/bootstrap.min.css" rel="stylesheet" />  -->
   <script type="text/javascript" src="/js/js-sha256 v0.3.0.js"></script> 
   <script type="text/javascript" src="/js/wangEditor.min.js"></script>  
   <script type="text/javascript" src="/js/highlight.pack.js"></script>
@@ -26,16 +29,18 @@
  </head> 
  <body style="padding-top: 70px;">
   <!--导航栏 --> 
-  <nav id="navbar" class="navbar navbar-default navbar-fixed-top"> 
+  <nav id="navbar" class="navbar navbar-toggleable-md navbar-light bg-faded navbar-fixed-top"> 
    <div class="container"> 
     <div class="navbar-header"> 
-     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false" aria-controls="navbar"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> 
+     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+      </button> 
      <a class="navbar-brand" href="/">Note Book</a> 
     </div> 
-    <div id="navbar-collapse" class="navbar-collapse collapse"> 
-     <ul class="nav navbar-nav"> 
-      <li> <a href="/list">公共文章</a> </li> 
-      <li id="menu-user" class="dropdown"></li> 
+    <div id="collapse navbar-collapse" class="navbar-collapse collapse"> 
+     <ul class="navbar-nav mr-auto"> 
+      <li class="nav-item active"> <a href="/list">公共文章</a> </li> 
+      <li id="menu-user" class="nav-link"></li> 
       <div id="open-login" style="display:none;margin-left:5px;" class="navbar-form navbar-right"> 
        <button type="button" class="btn btn-default">登录/注册</button> 
       </div> 

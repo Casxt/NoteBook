@@ -83,9 +83,9 @@ def CheckUser(uf):#检查用户能否登录
         return ({"state":"Failed"})
     
 def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文章编辑
-
+    pprint(ActionInfo)
     try:
-        ActionInfo = CheckParamet(("title","mode"),ActionInfo,("author","name"))
+        ActionInfo = CheckParamet(("title","mode"),ActionInfo,("author","name","password"))
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"title":"Paramet Error","essay":e.err,"state":"Failed"})
@@ -110,7 +110,7 @@ def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文�
     except Exception as e:
         logger.Record("ERROR",str(e),{"Function":"GetArticle","Info":ActionInfo,"Detial":traceback.format_exc()})
         return ({"title":"GetArticle UnkonwErr","essay":"GetArticle UnkonwErr","state":"Failed"})
-
+    
     if article["saltpassword"] is not None:#如果有密码
         article["havepassword"]=True
         if ActionInfo["mode"]=="edit":#如果有传入密码
@@ -135,7 +135,7 @@ def GetArticle(ActionInfo):#快速获取文章内容，用于主页展示和文�
         
 def SubmitArticle(ActionInfo):
     try:
-        ActionInfo = CheckParamet(["uid","name","author","title","essay","type"],ActionInfo,["articlepermissions","articlegroup"])
+        ActionInfo = CheckParamet(["title","essay","type"],ActionInfo,["uid","name","author","articlepermissions","articlegroup"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
@@ -158,7 +158,7 @@ def SubmitArticle(ActionInfo):
 def EditArticle(ActionInfo):#修改文章
 #ActionInfo=('title','name','essay','permission','password')
     try:
-        ActionInfo = CheckParamet(["uid","name","author","title","rawtitle","essay","type"],ActionInfo,["password"])
+        ActionInfo = CheckParamet(["title","rawtitle","essay","type"],ActionInfo,["author","uid","name","password"])
     except NoteError as e:
         logger.Record("INFO",e.err,{"Function":e.function,"Info":e.info})
         return ({"state":e.err})
